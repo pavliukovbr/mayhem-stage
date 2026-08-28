@@ -49,11 +49,24 @@ tools/install.sh             copia o datapack para um save
 sources/                     material de referencia, nao alterar, fora do git
 ```
 
+## Mod Fabric (mod/)
+
+O mod `mayhem-show` e quem transforma o mapa em concerto: relogio de show no
+servidor, cues por musica em JSON, luzes, telao e efeitos renderizados no
+cliente. Alvo: Minecraft 26.2, Fabric Loader 0.19.5, Fabric API 0.158.0+26.2,
+Java 25. A era 26.x vem sem ofuscacao, entao o build nao tem linha de
+mappings.
+
+```bash
+cd mod && JAVA_HOME=/opt/homebrew/opt/openjdk@25 ./gradlew build
+```
+
+`./gradlew runClient` abre um cliente de teste com o mod carregado.
+
 ## Estado
 
-Existe a especificacao e o blockout por blocos. **Ainda nao existe** projeto
-Fabric, Gradle, Blockbench ou GeckoLib. Compilar mod para a 26.2 vai exigir
-**JDK 25**, que ainda nao esta instalado nesta maquina.
+Blockout giga V03 no datapack (3 blocos = 1 m) e esqueleto do mod compilando.
+Ainda nao existem modelos Blockbench nem o sistema de cues; e o proximo passo.
 
 ## Licenca e assets
 

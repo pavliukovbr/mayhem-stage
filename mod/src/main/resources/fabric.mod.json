@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "mayhem",
+  "version": "${version}",
+  "name": "Mayhem Show",
+  "description": "Concerto multiplayer sincronizado: palco barroco, luzes, telao e cues por musica.",
+  "authors": ["pavliukovbr"],
+  "contact": { "sources": "https://github.com/pavliukovbr/mayhem-stage" },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.pavliukovbr.mayhem.MayhemShow"],
+    "client": ["dev.pavliukovbr.mayhem.client.MayhemShowClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
