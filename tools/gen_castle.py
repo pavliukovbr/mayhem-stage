@@ -13,20 +13,23 @@ import math, os
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "datapack", "data", "mayhem", "function")
 
-SMOOTH  = "minecraft:smooth_quartz"
-CHISEL  = "minecraft:chiseled_quartz_block"
-PILLAR  = "minecraft:quartz_pillar[axis=y]"
-BALUST  = "minecraft:diorite_wall"
-SLAB    = "minecraft:quartz_slab[type=bottom]"
+# Materiais do mod mayhem-show: marfim envelhecido, preto brilhante e LED
+# emissivo de verdade (lightLevel 15). O datapack passa a DEPENDER do mod.
+SMOOTH  = "mayhem:ivory_plain"
+CHISEL  = "mayhem:ivory_carved"
+PILLAR  = "mayhem:ivory_fluted[axis=y]"
+BALUST  = "mayhem:ivory_wall"
+SLAB    = "mayhem:ivory_slab[type=bottom]"
 BLACKP  = "minecraft:polished_blackstone"
 TRUSS   = "minecraft:polished_blackstone_wall"
-BLACKC  = "minecraft:black_concrete"
-WHITEC  = "minecraft:white_concrete"
-REDC    = "minecraft:red_concrete"
-GOLD    = "minecraft:gold_block"
+BLACKC  = "mayhem:gloss_black"
+VELVET  = "mayhem:velvet_black"
+WHITEC  = "mayhem:led_white"
+REDC    = "mayhem:led_red"
+GOLD    = "mayhem:gold_leaf"
 PANE    = "minecraft:white_stained_glass_pane"
-CAP     = "minecraft:quartz_stairs[facing=south,half=top]"     # cornija em balanco
-FOOT    = "minecraft:quartz_stairs[facing=south,half=bottom]"  # pe de moldura
+CAP     = "mayhem:ivory_stairs[facing=south,half=top]"     # cornija em balanco
+FOOT    = "mayhem:ivory_stairs[facing=south,half=bottom]"  # pe de moldura
 
 def F(x1,y1,z1,x2,y2,z2,b):
     return ("fill",min(x1,x2),min(y1,y2),min(z1,z2),max(x1,x2),max(y1,y2),max(z1,z2),b)
@@ -138,7 +141,7 @@ def arch():
     ops.append(F(-13,30,27,13,35,35,SMOOTH))
     ops.append(F(-13,31,27,13,31,27,CHISEL))
     # teto escuro do tunel
-    ops.append(F(-12,30,31,12,30,35,BLACKC))
+    ops.append(F(-12,30,31,12,30,35,VELVET))
     # entablamento e cornija atravessando tudo (X -26..26)
     ops.append(F(-26,36,27,26,38,35,SMOOTH))
     ops.append(F(-26,37,27,26,37,27,CHISEL))
@@ -165,7 +168,7 @@ def arch():
     for x in range(-12,13,2):
         ops.append(F(x,0,30,x,28,30,PANE))
     # fundo preto do tunel
-    ops.append(F(-14,0,36,14,35,36,BLACKC))
+    ops.append(F(-14,0,36,14,35,36,VELVET))
     return ops
 
 # ----------------------------------------------------------------- resto
@@ -199,8 +202,8 @@ def runway():
 
 def led_wall():
     ops=[F(-94,-1,54,94,2,56,BLACKP)]                    # base ate o chao
-    ops.append(F(-94,3,55,94,56,56,BLACKC))              # corpo
-    ops.append(F(-93,4,54,93,55,54,BLACKC))              # face
+    ops.append(F(-94,3,55,94,56,56,VELVET))              # corpo
+    ops.append(F(-93,4,54,93,55,54,VELVET))              # face
     ops.append(F(-94,3,54,94,3,54,WHITEC))               # moldura line art
     ops.append(F(-94,56,54,94,56,54,WHITEC))
     ops.append(F(-94,3,54,-94,56,54,WHITEC))

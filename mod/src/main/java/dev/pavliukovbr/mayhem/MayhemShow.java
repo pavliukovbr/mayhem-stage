@@ -17,6 +17,7 @@ public class MayhemShow implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        StageBlocks.init();
         LOGGER.info("Mayhem Show carregado. O relogio do show pertence ao servidor.");
     }
 }

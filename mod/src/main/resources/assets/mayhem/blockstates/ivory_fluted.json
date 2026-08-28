@@ -1,0 +1,16 @@
+{
+ "variants": {
+  "axis=y": {
+   "model": "mayhem:block/ivory_fluted"
+  },
+  "axis=x": {
+   "model": "mayhem:block/ivory_fluted",
+   "x": 90,
+   "y": 90
+  },
+  "axis=z": {
+   "model": "mayhem:block/ivory_fluted",
+   "x": 90
+  }
+ }
+}

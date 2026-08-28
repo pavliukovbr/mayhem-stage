@@ -1,0 +1,13 @@
+{
+ "variants": {
+  "type=bottom": {
+   "model": "mayhem:block/ivory_slab"
+  },
+  "type=top": {
+   "model": "mayhem:block/ivory_slab_top"
+  },
+  "type=double": {
+   "model": "mayhem:block/ivory_plain"
+  }
+ }
+}

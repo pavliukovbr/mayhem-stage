@@ -1,0 +1,7 @@
+{
+ "parent": "minecraft:block/cube_column",
+ "textures": {
+  "side": "mayhem:block/ivory_fluted_side",
+  "end": "mayhem:block/ivory_fluted_end"
+ }
+}
