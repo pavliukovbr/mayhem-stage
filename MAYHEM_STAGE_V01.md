@@ -1,7 +1,11 @@
-# Mayhem Stage V02: planta tecnica do blockout
+# Mayhem Stage V03: planta tecnica do blockout giga
 
 Palco de concerto de estetica teatral barroca para Minecraft Java Edition.
-Alvo: **26.2** (release, `pack_format` 107). Escala: **1 bloco = 1 metro**.
+Alvo: **26.2** (release, `pack_format` 107). Escala do V03: **3 blocos = 1 metro**
+(o palco construido tem 3x o tamanho real; a fachada mede 129 blocos). Foi o
+caminho para caber detalhe de verdade em bloco: coluna 2x2 com base e capitel,
+balaustrada de postes individuais, cornija em balanco e brasao com escudo,
+volutas e querubins. Um jogador de 1,8 bloco equivale a 60 cm nessa escala.
 
 A V01 tinha uma fachada plana com colunas soltas na frente. As referencias
 fotograficas mostraram outra coisa: o castelo real sao **tres pecas

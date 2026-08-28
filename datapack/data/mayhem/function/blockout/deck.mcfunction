@@ -1,9 +1,8 @@
-# Deck principal: X -24..+24 (49 blocos), Z 0..17 (18 m), piso em Y -1.
-# 49 e nao 48 para existir uma coluna central verdadeira em X 0.
-fill ~-24 ~-1 ~0 ~24 ~-1 ~17 minecraft:black_concrete
-# Friso da boca de cena, aberto no vao da passarela (X -4..+4).
-fill ~-24 ~-1 ~0 ~-5 ~-1 ~0 minecraft:polished_blackstone
-fill ~5 ~-1 ~0 ~24 ~-1 ~0 minecraft:polished_blackstone
-# Frisos laterais.
-fill ~-24 ~-1 ~0 ~-24 ~-1 ~17 minecraft:polished_blackstone
-fill ~24 ~-1 ~0 ~24 ~-1 ~17 minecraft:polished_blackstone
+# Deck principal 145x54 (48x18 m na escala 3:1).
+# GERADO por tools/gen_castle.py; nao editar a mao.
+fill ~-72 ~-1 ~0 ~72 ~-1 ~53 minecraft:black_concrete
+fill ~-72 ~-1 ~0 ~-72 ~-1 ~53 minecraft:polished_blackstone
+fill ~72 ~-1 ~0 ~72 ~-1 ~53 minecraft:polished_blackstone
+fill ~-72 ~-1 ~53 ~72 ~-1 ~53 minecraft:polished_blackstone
+fill ~-72 ~-1 ~0 ~-14 ~-1 ~0 minecraft:polished_blackstone
+fill ~14 ~-1 ~0 ~72 ~-1 ~0 minecraft:polished_blackstone

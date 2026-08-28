@@ -1,6 +1,8 @@
-# Dois plintos baixos de marfim ao lado da boca da passarela.
+# Dois plintos de marfim ao lado da boca da passarela.
 # GERADO por tools/gen_castle.py; nao editar a mao.
-fill ~-8 ~0 ~1 ~-6 ~1 ~3 minecraft:smooth_quartz
-fill ~-8 ~1 ~1 ~-6 ~1 ~1 minecraft:chiseled_quartz_block
-fill ~6 ~0 ~1 ~8 ~1 ~3 minecraft:smooth_quartz
-fill ~6 ~1 ~1 ~8 ~1 ~1 minecraft:chiseled_quartz_block
+fill ~-24 ~0 ~3 ~-16 ~4 ~11 minecraft:smooth_quartz
+fill ~-24 ~2 ~3 ~-16 ~3 ~3 minecraft:chiseled_quartz_block
+fill ~-24 ~5 ~3 ~-16 ~5 ~11 minecraft:quartz_slab[type=bottom]
+fill ~16 ~0 ~3 ~24 ~4 ~11 minecraft:smooth_quartz
+fill ~16 ~2 ~3 ~24 ~3 ~3 minecraft:chiseled_quartz_block
+fill ~16 ~5 ~3 ~24 ~5 ~11 minecraft:quartz_slab[type=bottom]
