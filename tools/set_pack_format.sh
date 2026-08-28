@@ -14,15 +14,20 @@ if [ ! -f "$JAR" ]; then
   exit 1
 fi
 
-FMT="$(unzip -p "$JAR" version.json | python3 -c '
+# O formato de version.json ja mudou tres vezes. Na 26.2 ele traz
+# pack_version.data_major, mas versoes antigas usavam pack_version.data como
+# inteiro ou como objeto {major, minor}. As tres formas sao aceitas aqui.
+read -r FMT MINOR <<< "$(unzip -p "$JAR" version.json | python3 -c '
 import json,sys
-d=json.load(sys.stdin)
-p=d.get("pack_version")
+p=json.load(sys.stdin).get("pack_version") or {}
 if isinstance(p,dict):
-    v=p.get("data")
-    print(v.get("major") if isinstance(v,dict) else v)
+    if "data_major" in p:
+        print(p["data_major"], p.get("data_minor",0))
+    else:
+        v=p.get("data")
+        print(*( (v.get("major"),v.get("minor",0)) if isinstance(v,dict) else (v,0) ))
 else:
-    print(p)
+    print(p,0)
 ')"
 
 case "$FMT" in
@@ -30,5 +35,5 @@ case "$FMT" in
 esac
 
 sed "s/__PACK_FORMAT__/$FMT/" "$ROOT/datapack/pack.mcmeta.template" > "$ROOT/datapack/pack.mcmeta"
-echo "pack_format do $VERSION = $FMT"
+echo "pack_format de dados do $VERSION = $FMT.$MINOR (pack.mcmeta usa $FMT)"
 echo "escrito em $ROOT/datapack/pack.mcmeta"

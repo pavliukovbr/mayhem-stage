@@ -1,0 +1,23 @@
+# Limpa o envelope do palco. Chamado so por mayhem:demolish.
+# GERADO por tools/gen_castle.py; nao editar a mao.
+fill ~-32 ~-1 ~-44 ~32 ~-1 ~20 minecraft:air
+fill ~-32 ~0 ~-44 ~32 ~0 ~20 minecraft:air
+fill ~-32 ~1 ~-44 ~32 ~1 ~20 minecraft:air
+fill ~-32 ~2 ~-44 ~32 ~2 ~20 minecraft:air
+fill ~-32 ~3 ~-44 ~32 ~3 ~20 minecraft:air
+fill ~-32 ~4 ~-44 ~32 ~4 ~20 minecraft:air
+fill ~-32 ~5 ~-44 ~32 ~5 ~20 minecraft:air
+fill ~-32 ~6 ~-44 ~32 ~6 ~20 minecraft:air
+fill ~-32 ~7 ~-44 ~32 ~7 ~20 minecraft:air
+fill ~-32 ~8 ~-44 ~32 ~8 ~20 minecraft:air
+fill ~-32 ~9 ~-44 ~32 ~9 ~20 minecraft:air
+fill ~-32 ~10 ~-44 ~32 ~10 ~20 minecraft:air
+fill ~-32 ~11 ~-44 ~32 ~11 ~20 minecraft:air
+fill ~-32 ~12 ~-44 ~32 ~12 ~20 minecraft:air
+fill ~-32 ~13 ~-44 ~32 ~13 ~20 minecraft:air
+fill ~-32 ~14 ~-44 ~32 ~14 ~20 minecraft:air
+fill ~-32 ~15 ~-44 ~32 ~15 ~20 minecraft:air
+fill ~-32 ~16 ~-44 ~32 ~16 ~20 minecraft:air
+fill ~-32 ~17 ~-44 ~32 ~17 ~20 minecraft:air
+fill ~-32 ~18 ~-44 ~32 ~18 ~20 minecraft:air
+fill ~-32 ~19 ~-44 ~32 ~19 ~20 minecraft:air

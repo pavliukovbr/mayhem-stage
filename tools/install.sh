@@ -10,6 +10,6 @@ SAVE="$HOME/Library/Application Support/minecraft/saves/$WORLD"
 
 DEST="$SAVE/datapacks/mayhem_stage"
 mkdir -p "$DEST"
-rsync -a --delete "$ROOT/datapack/" "$DEST/"
+rsync -a --delete --exclude pack.mcmeta.template "$ROOT/datapack/" "$DEST/"
 echo "instalado em $DEST"
 echo "no jogo: /reload  e depois  /function mayhem:build_blockout"

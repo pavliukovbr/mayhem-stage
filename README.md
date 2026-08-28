@@ -28,6 +28,9 @@ A planta tecnica esta em [MAYHEM_STAGE_V01.md](MAYHEM_STAGE_V01.md).
    /function mayhem:build_blockout
    ```
 
+   Para reconstruir depois de mudar o gerador ou os modulos:
+   `/function mayhem:demolish` e depois `/function mayhem:build_blockout`.
+
 Voce vai aparecer perto de `X 0, Z 0`, que e a boca de cena. Olhe para `+Z` para
 ver a fachada e para `-Z` para ver a passarela.
 
@@ -38,7 +41,9 @@ datapack/                    o datapack instalavel
   pack.mcmeta.template       vira pack.mcmeta com o numero real da versao
   data/mayhem/function/
     build_blockout.mcfunction   ancora do palco no mundo, uma linha so
+    demolish.mcfunction         limpa o envelope do palco para reconstruir
     blockout/                   um arquivo por modulo do palco
+tools/gen_castle.py          gera os modulos do castelo; nao editar os gerados
 tools/set_pack_format.sh     le o pack_format do jar da versao
 tools/install.sh             copia o datapack para um save
 sources/                     material de referencia, nao alterar, fora do git
