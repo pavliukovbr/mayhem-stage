@@ -57,8 +57,10 @@ public final class PropRenderer {
 
     private static final java.util.Map<String, Prop> PROPS = new java.util.LinkedHashMap<>();
     static {
-        PROPS.put("castle", new Prop("/assets/mayhem/meshes/castle.bin", 0.5, -54.0, 37.8, 180f));
-        PROPS.put("dress",  new Prop("/assets/mayhem/meshes/dress.bin",  0.5, -60.0, 75.0, 180f));
+        PROPS.put("castle",  new Prop("/assets/mayhem/meshes/castle.bin",  0.5, -54.0, 37.8, 180f));
+        PROPS.put("dress_l", new Prop("/assets/mayhem/meshes/dress_l.bin", 0.5, -60.0, 75.0, 180f));
+        PROPS.put("dress_r", new Prop("/assets/mayhem/meshes/dress_r.bin", 0.5, -60.0, 75.0, 180f));
+        PROPS.put("cage",    new Prop("/assets/mayhem/meshes/cage.bin",    0.5, -75.0, 8.0, 180f));
     }
 
     public static void moveProp(String name, double x, double y, double z, float yaw, int durMs) {

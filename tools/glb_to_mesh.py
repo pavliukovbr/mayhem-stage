@@ -8,6 +8,9 @@ Uso: python3 tools/glb_to_mesh.py <nome>   (default: castle)
 """
 import json, struct, io, os, sys
 NAME = sys.argv[1] if len(sys.argv) > 1 else "castle"
+TINT = None
+if "--tint" in sys.argv:
+    TINT = [float(v) for v in sys.argv[sys.argv.index("--tint")+1].split(",")]
 f=open(f'sources/{NAME}_game.glb','rb').read()
 jlen,_=struct.unpack('<II',f[12:20]); g=json.loads(f[20:20+jlen]); boff=20+jlen+8
 def buf(i):
@@ -29,7 +32,12 @@ import statistics
 print('AO media:', round(statistics.mean(a[0] for a in ao[::701]),3))
 out=io.BytesIO(); out.write(struct.pack('<III',0x4D534D33,len(pos),len(idx)))
 for P,N,C,A in zip(pos,nrm,col,ao):
-    out.write(struct.pack('<10f',P[0],P[1],P[2],N[0],N[1],N[2],C[0],C[1],C[2],A[0]))
+    c = C
+    if TINT:
+        # recolore por luminancia: sombra do bake permanece, matiz vira o alvo
+        luma = min(1.5, (0.2126*C[0]+0.7152*C[1]+0.0722*C[2]) / 0.30)
+        c = (TINT[0]*luma, TINT[1]*luma, TINT[2]*luma)
+    out.write(struct.pack('<10f',P[0],P[1],P[2],N[0],N[1],N[2],c[0],c[1],c[2],A[0]))
 for i in idx: out.write(struct.pack('<I',i))
 outdir='mod/src/client/resources/assets/mayhem/meshes'
 os.makedirs(outdir, exist_ok=True)

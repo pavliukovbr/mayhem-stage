@@ -1,13 +1,14 @@
 package dev.pavliukovbr.mayhem;
 
 import com.mojang.brigadier.arguments.FloatArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.server.permissions.Permissions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.permissions.Permissions;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,41 +17,71 @@ import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 /**
- * /mayhem <prop> <marca> [segundos] — move um prop para uma marca de palco.
- * O estado vive aqui no servidor; quem entra depois recebe o ultimo estado.
+ * Comandos do show. O vestido e um grupo de duas metades: elas viajam
+ * juntas e abrem afastando-se no eixo X. O servidor guarda o centro e o
+ * vao atuais, e o ultimo destino de cada prop para sincronizar quem entra.
  */
 public final class MayhemCommands {
-    /** Ultimo destino de cada prop, para sincronizar quem entrar no meio. */
     public static final Map<String, PropMovePayload> STATE = new ConcurrentHashMap<>();
+
+    private static ShowMarks.Mark dressCenter = ShowMarks.DRESS.get("backstage");
+    private static double dressGap = 0;
+    private static final double OPEN_GAP = 6.5;
 
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> {
-            var root = literal("mayhem").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER));
-            ShowMarks.PROPS.forEach((propName, marks) -> {
-                var prop = literal(propName);
-                marks.forEach((markName, m) -> prop
-                    .then(literal(markName)
-                        .executes(ctx -> move(ctx.getSource(), propName, m, 10f))
-                        .then(argument("segundos", FloatArgumentType.floatArg(0f, 600f))
-                            .executes(ctx -> move(ctx.getSource(), propName, m,
-                                    FloatArgumentType.getFloat(ctx, "segundos"))))));
-                root.then(prop);
-            });
+            var root = literal("mayhem")
+                    .requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER));
+
+            var dress = literal("dress");
+            ShowMarks.DRESS.forEach((name, m) -> dress.then(timed(name,
+                    (src, sec) -> moveDress(src, m, dressGap, sec))));
+            dress.then(timed("open",  (src, sec) -> moveDress(src, dressCenter, OPEN_GAP, sec)));
+            dress.then(timed("close", (src, sec) -> moveDress(src, dressCenter, 0, sec)));
+            root.then(dress);
+
+            var cage = literal("cage");
+            ShowMarks.CAGE.forEach((name, m) -> cage.then(timed(name,
+                    (src, sec) -> moveOne(src, "cage", m, sec))));
+            root.then(cage);
+
             dispatcher.register(root);
         });
     }
 
-    private static int move(CommandSourceStack src, String prop, ShowMarks.Mark m, float seconds) {
-        var payload = new PropMovePayload(prop, m.x(), m.y(), m.z(), m.yaw(),
-                (int) (seconds * 1000));
-        STATE.put(prop, payload);
-        broadcast(src.getServer(), payload);
+    private interface Move { int run(CommandSourceStack src, float seconds); }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> timed(String name, Move move) {
+        return literal(name)
+                .executes(ctx -> move.run(ctx.getSource(), 10f))
+                .then(argument("segundos", FloatArgumentType.floatArg(0f, 600f))
+                        .executes(ctx -> move.run(ctx.getSource(),
+                                FloatArgumentType.getFloat(ctx, "segundos"))));
+    }
+
+    private static int moveDress(CommandSourceStack src, ShowMarks.Mark center,
+                                 double gap, float seconds) {
+        dressCenter = center;
+        dressGap = gap;
+        send(src.getServer(), new PropMovePayload("dress_l",
+                center.x() - gap, center.y(), center.z(), center.yaw(), (int) (seconds * 1000)));
+        send(src.getServer(), new PropMovePayload("dress_r",
+                center.x() + gap, center.y(), center.z(), center.yaw(), (int) (seconds * 1000)));
         src.sendSuccess(() -> Component.literal(
-                prop + " indo para a marca em " + seconds + "s"), true);
+                "vestido em movimento (" + seconds + "s, vao " + gap + ")"), true);
         return 1;
     }
 
-    public static void broadcast(MinecraftServer server, PropMovePayload payload) {
+    private static int moveOne(CommandSourceStack src, String prop,
+                               ShowMarks.Mark m, float seconds) {
+        send(src.getServer(), new PropMovePayload(prop,
+                m.x(), m.y(), m.z(), m.yaw(), (int) (seconds * 1000)));
+        src.sendSuccess(() -> Component.literal(prop + " em movimento (" + seconds + "s)"), true);
+        return 1;
+    }
+
+    private static void send(MinecraftServer server, PropMovePayload payload) {
+        STATE.put(payload.prop(), payload);
         for (var player : PlayerLookup.all(server)) {
             ServerPlayNetworking.send(player, payload);
         }
