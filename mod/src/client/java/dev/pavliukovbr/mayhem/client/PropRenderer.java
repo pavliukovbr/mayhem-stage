@@ -31,13 +31,16 @@ public final class PropRenderer {
         final String meshPath;
         int vao = -1, indexCount;
         double sx, sy, sz, tx, ty, tz;    // origem e destino do movimento
-        float syaw, tyaw;                  // rotacao tambem anima (portas!)
+        float syaw, tyaw;                  // rotacao tambem anima (cortinas!)
+        float scale = 1f;
         long moveStart; int moveDur;       // ms
 
         Prop(String meshPath, double x, double y, double z, float yaw) {
             this.meshPath = meshPath;
             sx = tx = x; sy = ty = y; sz = tz = z; syaw = tyaw = yaw;
         }
+
+        Prop scaled(float s) { scale = s; return this; }
 
         void moveTo(double x, double y, double z, float yaw, int durMs) {
             double[] now = pos();
@@ -58,12 +61,17 @@ public final class PropRenderer {
 
     private static final java.util.Map<String, Prop> PROPS = new java.util.LinkedHashMap<>();
     static {
+        // vestido exportado com 15 blocos de altura; o do show tem 27 (falta
+        // 1 m para o topo do vao do arco). Escala no render resolve, e as
+        // cortinas vao 2% para fora para nao brigar com a superficie do corpo.
+        float DS = 27f / 15f;
         PROPS.put("castle",     new Prop("/assets/mayhem/meshes/castle.bin",     0.5, -54.0, 37.8, 180f));
-        PROPS.put("dress_body", new Prop("/assets/mayhem/meshes/dress_body.bin", 0.5, -60.0, 75.0, 180f));
-        PROPS.put("curtain_l",  new Prop("/assets/mayhem/meshes/curtain_l.bin",  0.5, -60.0, 75.0, 180f));
-        PROPS.put("curtain_r",  new Prop("/assets/mayhem/meshes/curtain_r.bin",  0.5, -60.0, 75.0, 180f));
+        PROPS.put("dress_body", new Prop("/assets/mayhem/meshes/dress_body.bin", 0.5, -60.0, 75.0, 180f).scaled(DS));
+        PROPS.put("curtain_l",  new Prop("/assets/mayhem/meshes/curtain_l.bin",  0.5, -60.0, 75.0, 180f).scaled(DS * 1.02f));
+        PROPS.put("curtain_r",  new Prop("/assets/mayhem/meshes/curtain_r.bin",  0.5, -60.0, 75.0, 180f).scaled(DS * 1.02f));
         PROPS.put("cage",       new Prop("/assets/mayhem/meshes/cage.bin",       0.5, -60.0, 75.0, 180f));
         PROPS.put("cage_door",  new Prop("/assets/mayhem/meshes/cage_door.bin",  0.5, -60.0, 75.0, 180f));
+        PROPS.put("lift",       new Prop("/assets/mayhem/meshes/lift.bin",       0.5, -60.0, 75.0, 180f));
     }
 
     public static void moveProp(String name, double x, double y, double z, float yaw, int durMs) {
@@ -146,7 +154,8 @@ public final class PropRenderer {
                     .translate((float) (w[0] - fr.mayhem$camX()),
                                (float) (w[1] - fr.mayhem$camY()),
                                (float) (w[2] - fr.mayhem$camZ()))
-                    .rotateY((float) Math.toRadians(yawNow));
+                    .rotateY((float) Math.toRadians(yawNow))
+                    .scale(p.scale);
             // frustum classico vs depth reversed-Z: nega a linha z do clip
             mvp = new Matrix4f().scaling(1f, 1f, -1f).mul(mvp);
             float[] m = new float[16];

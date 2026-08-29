@@ -32,18 +32,8 @@ for part, lo, hi, hinge_az in (("curtain_l", -HALF_ANGLE, 0.0, -HALF_ANGLE),
     bmesh.ops.delete(bm, geom=doomed, context='FACES')
     bm.to_mesh(o.data); bm.free()
 
-    if hinge_az is not None:
-        b = math.radians(hinge_az)
-        best = 0.0
-        for v in o.data.vertices:
-            if abs(azimuth(v.co.x, v.co.y) - hinge_az) < 4.0:
-                best = max(best, math.hypot(v.co.x, v.co.y))
-        hx, hy = math.sin(b)*best, -math.cos(b)*best
-        for v in o.data.vertices:
-            v.co.x -= hx; v.co.y -= hy
-        # offset local do jogo: X igual, Z = -Y do Blender
-        print(f"HINGE {part} game_local=({hx:.3f}, {-hy:.3f}) r={best:.3f}")
-
+    # origem fica no CENTRO do vestido: girar o prop em Y desliza a aba
+    # pela superficie da saia, como cortina em trilho circular
     bpy.ops.export_scene.gltf(filepath=os.path.join(ROOT, "sources", f"{part}_game.glb"),
                               export_format='GLB', export_yup=True, export_apply=True)
     print("PART OK", part, len(o.data.polygons), "faces")

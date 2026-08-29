@@ -17,23 +17,19 @@ import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 /**
- * Comandos do show. O vestido e um conjunto rigido: corpo, duas cortinas
- * frontais com dobradica na borda externa, e a gaiola dentro com porta.
- * Tudo viaja junto; abrir e girar cortinas e porta nas dobradicas.
+ * Comandos do show. Todas as pecas do vestido compartilham o mesmo centro;
+ * abrir cortinas e girar as abas em volta do eixo, deslizando pela saia
+ * como tecido em trilho. O elevador central sobe pelo eixo ate o topo.
  */
 public final class MayhemCommands {
     public static final Map<String, PropMovePayload> STATE = new ConcurrentHashMap<>();
 
-    // dobradicas em coordenadas locais do modelo (medidas nos scripts)
-    private static final double CL_X = -3.449, CL_Z = 4.925;
-    private static final double CR_X =  3.446, CR_Z = 4.922;
-    private static final double CD_X = -1.500, CD_Z = 2.598;
-    private static final float CURTAIN_SWING = 75f;   // graus de abertura
-    private static final float DOOR_SWING = 100f;
+    private static final float CURTAIN_SLIDE = 55f;   // graus pelo trilho
+    private static final float DOOR_SLIDE = 50f;
+    private static final double LIFT_TOP = 26.0;      // topo do vestido
 
     private static ShowMarks.Mark center = ShowMarks.DRESS.get("backstage");
-    private static float curtain = 0f;   // 0 fechado .. 1 aberto
-    private static float door = 0f;
+    private static float curtain = 0f, door = 0f, lift = 0f;
 
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> {
@@ -41,16 +37,21 @@ public final class MayhemCommands {
                     .requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER));
 
             var dress = literal("dress");
-            ShowMarks.DRESS.forEach((name, m) -> dress.then(timed(name,
+            ShowMarks.DRESS.forEach((name, m) -> dress.then(timed(name, 10f,
                     (src, sec) -> { center = m; return sync(src, sec); })));
-            dress.then(timed("open",  (src, sec) -> { curtain = 1f; return sync(src, sec); }));
-            dress.then(timed("close", (src, sec) -> { curtain = 0f; return sync(src, sec); }));
+            dress.then(timed("open", 1.5f,  (src, sec) -> { curtain = 1f; return sync(src, sec); }));
+            dress.then(timed("close", 1.5f, (src, sec) -> { curtain = 0f; return sync(src, sec); }));
             root.then(dress);
 
             var cage = literal("cage");
-            cage.then(timed("open",  (src, sec) -> { door = 1f; return sync(src, sec); }));
-            cage.then(timed("close", (src, sec) -> { door = 0f; return sync(src, sec); }));
+            cage.then(timed("open", 1.5f,  (src, sec) -> { door = 1f; return sync(src, sec); }));
+            cage.then(timed("close", 1.5f, (src, sec) -> { door = 0f; return sync(src, sec); }));
             root.then(cage);
+
+            var liftCmd = literal("lift");
+            liftCmd.then(timed("top", 8f,    (src, sec) -> { lift = 1f; return sync(src, sec); }));
+            liftCmd.then(timed("bottom", 8f, (src, sec) -> { lift = 0f; return sync(src, sec); }));
+            root.then(liftCmd);
 
             dispatcher.register(root);
         });
@@ -58,49 +59,40 @@ public final class MayhemCommands {
 
     private interface Move { int run(CommandSourceStack src, float seconds); }
 
-    private static LiteralArgumentBuilder<CommandSourceStack> timed(String name, Move move) {
+    private static LiteralArgumentBuilder<CommandSourceStack> timed(
+            String name, float defaultSec, Move move) {
         return literal(name)
-                .executes(ctx -> move.run(ctx.getSource(), 10f))
+                .executes(ctx -> move.run(ctx.getSource(), defaultSec))
                 .then(argument("segundos", FloatArgumentType.floatArg(0f, 600f))
                         .executes(ctx -> move.run(ctx.getSource(),
                                 FloatArgumentType.getFloat(ctx, "segundos"))));
     }
 
-    /** Recalcula as seis pecas a partir de centro + angulos e transmite. */
+    /** Recalcula as pecas a partir de centro e estados, e transmite. */
     private static int sync(CommandSourceStack src, float seconds) {
         int ms = (int) (seconds * 1000);
         var server = src.getServer();
-        double yawRad = Math.toRadians(center.yaw());
-        double c = Math.cos(yawRad), s = Math.sin(yawRad);
+        float yaw = center.yaw();
 
-        send(server, new PropMovePayload("dress_body",
-                center.x(), center.y(), center.z(), center.yaw(), ms));
-        // cortinas: posicao no ponto da dobradica (girado pelo rumo do grupo),
-        // rumo do grupo mais o giro de abertura para fora
-        sendHinged(server, "curtain_l", CL_X, CL_Z,  CURTAIN_SWING * curtain, c, s, ms);
-        sendHinged(server, "curtain_r", CR_X, CR_Z, -CURTAIN_SWING * curtain, c, s, ms);
-        send(server, new PropMovePayload("cage",
-                center.x(), center.y(), center.z(), center.yaw(), ms));
-        sendHinged(server, "cage_door", CD_X, CD_Z,  DOOR_SWING * door, c, s, ms);
+        at(server, "dress_body", 0, yaw, ms);
+        at(server, "curtain_l", 0, yaw + CURTAIN_SLIDE * curtain, ms);
+        at(server, "curtain_r", 0, yaw - CURTAIN_SLIDE * curtain, ms);
+        at(server, "cage", 0, yaw, ms);
+        at(server, "cage_door", 0, yaw + DOOR_SLIDE * door, ms);
+        at(server, "lift", LIFT_TOP * lift, yaw, ms);
 
         src.sendSuccess(() -> Component.literal(String.format(
-                "cena em movimento (%.1fs) cortinas=%s gaiola=%s",
+                "cena (%.1fs) cortinas=%s gaiola=%s elevador=%s",
                 seconds, curtain > 0 ? "abertas" : "fechadas",
-                door > 0 ? "aberta" : "fechada")), true);
+                door > 0 ? "aberta" : "fechada", lift > 0 ? "topo" : "base")), true);
         return 1;
     }
 
-    private static void sendHinged(MinecraftServer server, String prop,
-                                   double lx, double lz, float swing,
-                                   double c, double s, int ms) {
-        double wx = center.x() + lx * c + lz * s;
-        double wz = center.z() - lx * s + lz * c;
-        send(server, new PropMovePayload(prop, wx, center.y(), wz,
-                center.yaw() + swing, ms));
-    }
-
-    private static void send(MinecraftServer server, PropMovePayload payload) {
-        STATE.put(payload.prop(), payload);
+    private static void at(MinecraftServer server, String prop,
+                           double dy, float yaw, int ms) {
+        var payload = new PropMovePayload(prop,
+                center.x(), center.y() + dy, center.z(), yaw, ms);
+        STATE.put(prop, payload);
         for (var player : PlayerLookup.all(server)) {
             ServerPlayNetworking.send(player, payload);
         }

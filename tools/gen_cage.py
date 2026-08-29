@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
-"""Gaiola dourada parametrica, escrita direto no bin v3 do mod.
+"""Gaiola de aco em grade cilindrica + elevador central, no bin v3 do mod.
 
-Barras curvas de uma base circular convergindo numa cupula, tres aneis
-horizontais, final no topo. Ouro com sombra falsa por altura. 2.5 m de
-altura na escala 3:1 = 7.5 blocos.
+Como nas fotos do show: cilindro de barras verticais densas com aneis
+horizontais formando andares de celas, em aco escovado. A porta e um setor
+que desliza em volta do centro (mesma origem). O elevador e um disco que
+sobe pelo eixo ate o topo do vestido.
 """
 import math, struct, io
 
-H, R = 7.5, 3.0            # altura e raio em blocos
-BARS, SIDES, SEGS = 14, 6, 24
-GOLD = (0.55, 0.34, 0.09)  # linear
+H, R = 22.0, 8.0
+BARS, SIDES = 28, 6
+RINGS = (0.3, 5.5, 11.0, 16.5, 21.7)
+STEEL = (0.40, 0.41, 0.44)
+DOOR_HALF = math.radians(26)
+FRONT = math.pi/2
 
 verts, idxs = [], []
 
-def tube(path, radius):
+def tube(path, radius, col):
     base = len(verts)
     for i,(x,y,z) in enumerate(path):
         if i+1 < len(path):
@@ -31,23 +35,14 @@ def tube(path, radius):
             nx = vx*math.cos(a)+wx*math.sin(a)
             ny = vy*math.cos(a)+wy*math.sin(a)
             nz = vz*math.cos(a)+wz*math.sin(a)
-            shade = 0.75 + 0.25*(y/H)          # sombra falsa: base mais escura
-            verts.append((x+nx*radius, y+ny*radius, z+nz*radius,
-                          nx, ny, nz,
-                          GOLD[0]*shade, GOLD[1]*shade, GOLD[2]*shade, 1.0))
+            shade = 0.8 + 0.2*(y/H)
+            verts.append((x+nx*radius, y+ny*radius, z+nz*radius, nx, ny, nz,
+                          col[0]*shade, col[1]*shade, col[2]*shade, 1.0))
     for i in range(len(path)-1):
         for k in range(SIDES):
             a=base+i*SIDES+k; b=base+i*SIDES+(k+1)%SIDES
             c=base+(i+1)*SIDES+(k+1)%SIDES; d=base+(i+1)*SIDES+k
             idxs.extend((a,b,c, a,c,d))
-
-# A porta e o setor de +-30 graus em volta da frente (+Z local). Ela sai
-# num bin proprio, com a origem na dobradica (borda do vao, azimute +30),
-# para girar como porta.
-DOOR_HALF = math.radians(30)
-FRONT = math.pi/2                       # +Z local
-HINGE_A = FRONT + DOOR_HALF
-HINGE = (R*math.cos(HINGE_A), R*math.sin(HINGE_A))
 
 def in_door(ang):
     d = (ang - FRONT + math.pi) % (2*math.pi) - math.pi
@@ -58,28 +53,18 @@ def build(door):
     for b in range(BARS):
         ang = 2*math.pi*b/BARS
         if in_door(ang) != door: continue
-        path=[]
-        for s in range(SEGS+1):
-            t = s/SEGS
-            r = R if t < 0.72 else R*math.cos((t-0.72)/0.28*math.pi/2)
-            path.append((r*math.cos(ang), H*t, r*math.sin(ang)))
-        tube(path, 0.10)
-    for hy, rr in ((0.04,R),(0.5,R),(0.72,R)):
+        tube([(R*math.cos(ang), 0, R*math.sin(ang)),
+              (R*math.cos(ang), H, R*math.sin(ang))], 0.09, STEEL)
+    for hy in RINGS:
         arc=[]
-        for s in range(97):
-            a=2*math.pi*s/96
+        for s in range(121):
+            a=2*math.pi*s/120
             if in_door(a) != door:
-                if len(arc) > 1: tube(arc, 0.09)
+                if len(arc) > 1: tube(arc, 0.11, STEEL)
                 arc=[]
                 continue
-            arc.append((rr*math.cos(a), H*hy, rr*math.sin(a)))
-        if len(arc) > 1: tube(arc, 0.09)
-    if not door:
-        tube([(0,H,0),(0,H+0.5,0)], 0.16)
-    else:
-        # origem na dobradica
-        for i,v in enumerate(verts):
-            verts[i] = (v[0]-HINGE[0], v[1], v[2]-HINGE[1]) + v[3:]
+            arc.append((R*math.cos(a), hy, R*math.sin(a)))
+        if len(arc) > 1: tube(arc, 0.11, STEEL)
 
 def write(name):
     out=io.BytesIO()
@@ -91,4 +76,17 @@ def write(name):
 
 build(False); write("cage")
 build(True);  write("cage_door")
-print(f"HINGE cage_door game_local=({HINGE[0]:.3f}, {HINGE[1]:.3f})")
+
+# elevador: disco com borda dourada e piso escuro
+verts.clear(); idxs.clear()
+LR = 2.6
+ring=[(LR*math.cos(2*math.pi*s/48), 0.25, LR*math.sin(2*math.pi*s/48)) for s in range(49)]
+tube(ring, 0.22, (0.55, 0.34, 0.09))
+base=len(verts)
+verts.append((0, 0.42, 0, 0,1,0, 0.09,0.09,0.10, 1.0))
+for s in range(49):
+    a=2*math.pi*s/48
+    verts.append((LR*math.cos(a), 0.42, LR*math.sin(a), 0,1,0, 0.11,0.11,0.12, 1.0))
+for s in range(48):
+    idxs.extend((base, base+1+s, base+2+s))
+write("lift")
