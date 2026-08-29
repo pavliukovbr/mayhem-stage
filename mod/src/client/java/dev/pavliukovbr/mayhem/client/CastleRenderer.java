@@ -54,6 +54,9 @@ public final class CastleRenderer {
                 .translate((float) (AX - fr.mayhem$camX()),
                            (float) (AY - fr.mayhem$camY()),
                            (float) (AZ - fr.mayhem$camZ()));
+        // O GLB do Meshy nasce de imagem: a fachada aponta para +Z.
+        // No palco a frente e -Z (plateia); meia-volta na ancora resolve.
+        mvp.rotateY((float) Math.PI);
         // A matriz do Frustum e classica (so culling); o depth buffer do jogo
         // e reversed-Z (limpo em 0). Negar a linha z do clip converte:
         // depth_rev = 1 - depth_classico, e o teste vira GEQUAL.
