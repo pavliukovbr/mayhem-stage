@@ -15,6 +15,7 @@ loom {
             vmArg "-Dmayhem.debugshot.file=" + System.getProperty("shotfile", "debugshot.png")
             vmArg "-Dmayhem.mode=" + System.getProperty("mode", "full")
             vmArg "-Dmayhem.debugshot.cmd=" + System.getProperty("cmd", "")
+            vmArg "-Dmayhem.debugshot.frame=" + System.getProperty("shotframe", "300")
             if (System.getProperty("nodepth") != null) vmArg "-Dmayhem.nodepth=1"
         }
     }

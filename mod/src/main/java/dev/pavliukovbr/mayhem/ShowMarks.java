@@ -16,10 +16,5 @@ public final class ShowMarks {
         "mainstage", new Mark(0.5, -54.0, 8.0, 180f)
     );
 
-    public static final Map<String, Mark> CAGE = Map.of(
-        "hidden",    new Mark(0.5, -75.0, 8.0, 180f),
-        "mainstage", new Mark(0.5, -54.0, 8.0, 180f)
-    );
-
     private ShowMarks() {}
 }

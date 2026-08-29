@@ -29,7 +29,8 @@ public final class DebugShot {
                 }
             }
         }
-        if (frames != 300) return;
+        if (frames != Integer.getInteger("mayhem.debugshot.frame", 300)) return;
+        PropRenderer.dumpState();
         int[] vp = new int[4];
         GL33C.glGetIntegerv(GL33C.GL_VIEWPORT, vp);
         int w = vp[2], h = vp[3];

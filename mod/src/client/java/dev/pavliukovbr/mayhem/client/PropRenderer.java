@@ -30,19 +30,19 @@ public final class PropRenderer {
     public static final class Prop {
         final String meshPath;
         int vao = -1, indexCount;
-        double sx, sy, sz, tx, ty, tz;   // origem e destino do movimento
-        long moveStart; int moveDur;      // ms
-        float yawDeg;
+        double sx, sy, sz, tx, ty, tz;    // origem e destino do movimento
+        float syaw, tyaw;                  // rotacao tambem anima (portas!)
+        long moveStart; int moveDur;       // ms
 
         Prop(String meshPath, double x, double y, double z, float yaw) {
             this.meshPath = meshPath;
-            sx = tx = x; sy = ty = y; sz = tz = z; yawDeg = yaw;
+            sx = tx = x; sy = ty = y; sz = tz = z; syaw = tyaw = yaw;
         }
 
         void moveTo(double x, double y, double z, float yaw, int durMs) {
             double[] now = pos();
-            sx = now[0]; sy = now[1]; sz = now[2];
-            tx = x; ty = y; tz = z; yawDeg = yaw;
+            sx = now[0]; sy = now[1]; sz = now[2]; syaw = (float) now[3];
+            tx = x; ty = y; tz = z; tyaw = yaw;
             moveStart = System.currentTimeMillis();
             moveDur = Math.max(durMs, 1);
         }
@@ -51,21 +51,34 @@ public final class PropRenderer {
             long dt = System.currentTimeMillis() - moveStart;
             double t = moveDur <= 0 ? 1.0 : Math.min(1.0, dt / (double) moveDur);
             t = t * t * (3 - 2 * t);   // ease in-out
-            return new double[]{sx + (tx - sx) * t, sy + (ty - sy) * t, sz + (tz - sz) * t};
+            return new double[]{sx + (tx - sx) * t, sy + (ty - sy) * t,
+                                sz + (tz - sz) * t, syaw + (tyaw - syaw) * t};
         }
     }
 
     private static final java.util.Map<String, Prop> PROPS = new java.util.LinkedHashMap<>();
     static {
-        PROPS.put("castle",  new Prop("/assets/mayhem/meshes/castle.bin",  0.5, -54.0, 37.8, 180f));
-        PROPS.put("dress_l", new Prop("/assets/mayhem/meshes/dress_l.bin", 0.5, -60.0, 75.0, 180f));
-        PROPS.put("dress_r", new Prop("/assets/mayhem/meshes/dress_r.bin", 0.5, -60.0, 75.0, 180f));
-        PROPS.put("cage",    new Prop("/assets/mayhem/meshes/cage.bin",    0.5, -75.0, 8.0, 180f));
+        PROPS.put("castle",     new Prop("/assets/mayhem/meshes/castle.bin",     0.5, -54.0, 37.8, 180f));
+        PROPS.put("dress_body", new Prop("/assets/mayhem/meshes/dress_body.bin", 0.5, -60.0, 75.0, 180f));
+        PROPS.put("curtain_l",  new Prop("/assets/mayhem/meshes/curtain_l.bin",  0.5, -60.0, 75.0, 180f));
+        PROPS.put("curtain_r",  new Prop("/assets/mayhem/meshes/curtain_r.bin",  0.5, -60.0, 75.0, 180f));
+        PROPS.put("cage",       new Prop("/assets/mayhem/meshes/cage.bin",       0.5, -60.0, 75.0, 180f));
+        PROPS.put("cage_door",  new Prop("/assets/mayhem/meshes/cage_door.bin",  0.5, -60.0, 75.0, 180f));
     }
 
     public static void moveProp(String name, double x, double y, double z, float yaw, int durMs) {
         Prop p = PROPS.get(name);
         if (p != null) p.moveTo(x, y, z, yaw, durMs);
+        MayhemShow.LOGGER.info("MOVE {} -> ({}, {}, {}) yaw={} dur={}ms", name, x, y, z, yaw, durMs);
+    }
+
+    public static void dumpState() {
+        PROPS.forEach((n, p) -> {
+            double[] w = p.pos();
+            MayhemShow.LOGGER.info("STATE {} pos=({}, {}, {}) yaw={}",
+                    n, String.format("%.1f", w[0]), String.format("%.1f", w[1]),
+                    String.format("%.1f", w[2]), String.format("%.1f", w[3]));
+        });
     }
 
     private static int program = -1, uMvp, uSun, uCam;
@@ -128,17 +141,18 @@ public final class PropRenderer {
 
         for (Prop p : PROPS.values()) {
             double[] w = p.pos();
+            float yawNow = (float) w[3];
             Matrix4f mvp = new Matrix4f(fr.mayhem$matrix())
                     .translate((float) (w[0] - fr.mayhem$camX()),
                                (float) (w[1] - fr.mayhem$camY()),
                                (float) (w[2] - fr.mayhem$camZ()))
-                    .rotateY((float) Math.toRadians(p.yawDeg));
+                    .rotateY((float) Math.toRadians(yawNow));
             // frustum classico vs depth reversed-Z: nega a linha z do clip
             mvp = new Matrix4f().scaling(1f, 1f, -1f).mul(mvp);
             float[] m = new float[16];
             mvp.get(m);
             GL33C.glUniformMatrix4fv(uMvp, false, m);
-            double yr = Math.toRadians(p.yawDeg);
+            double yr = Math.toRadians(yawNow);
             float sxz = (float) Math.cos(yr), szx = (float) Math.sin(yr);
             // sol fixo do mundo levado para o espaco do modelo girado
             GL33C.glUniform3f(uSun, -0.35f * sxz, 0.85f, 0.40f * sxz);

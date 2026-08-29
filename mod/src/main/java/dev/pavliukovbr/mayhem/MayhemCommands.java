@@ -17,16 +17,23 @@ import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 /**
- * Comandos do show. O vestido e um grupo de duas metades: elas viajam
- * juntas e abrem afastando-se no eixo X. O servidor guarda o centro e o
- * vao atuais, e o ultimo destino de cada prop para sincronizar quem entra.
+ * Comandos do show. O vestido e um conjunto rigido: corpo, duas cortinas
+ * frontais com dobradica na borda externa, e a gaiola dentro com porta.
+ * Tudo viaja junto; abrir e girar cortinas e porta nas dobradicas.
  */
 public final class MayhemCommands {
     public static final Map<String, PropMovePayload> STATE = new ConcurrentHashMap<>();
 
-    private static ShowMarks.Mark dressCenter = ShowMarks.DRESS.get("backstage");
-    private static double dressGap = 0;
-    private static final double OPEN_GAP = 6.5;
+    // dobradicas em coordenadas locais do modelo (medidas nos scripts)
+    private static final double CL_X = -3.449, CL_Z = 4.925;
+    private static final double CR_X =  3.446, CR_Z = 4.922;
+    private static final double CD_X = -1.500, CD_Z = 2.598;
+    private static final float CURTAIN_SWING = 75f;   // graus de abertura
+    private static final float DOOR_SWING = 100f;
+
+    private static ShowMarks.Mark center = ShowMarks.DRESS.get("backstage");
+    private static float curtain = 0f;   // 0 fechado .. 1 aberto
+    private static float door = 0f;
 
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> {
@@ -35,14 +42,14 @@ public final class MayhemCommands {
 
             var dress = literal("dress");
             ShowMarks.DRESS.forEach((name, m) -> dress.then(timed(name,
-                    (src, sec) -> moveDress(src, m, dressGap, sec))));
-            dress.then(timed("open",  (src, sec) -> moveDress(src, dressCenter, OPEN_GAP, sec)));
-            dress.then(timed("close", (src, sec) -> moveDress(src, dressCenter, 0, sec)));
+                    (src, sec) -> { center = m; return sync(src, sec); })));
+            dress.then(timed("open",  (src, sec) -> { curtain = 1f; return sync(src, sec); }));
+            dress.then(timed("close", (src, sec) -> { curtain = 0f; return sync(src, sec); }));
             root.then(dress);
 
             var cage = literal("cage");
-            ShowMarks.CAGE.forEach((name, m) -> cage.then(timed(name,
-                    (src, sec) -> moveOne(src, "cage", m, sec))));
+            cage.then(timed("open",  (src, sec) -> { door = 1f; return sync(src, sec); }));
+            cage.then(timed("close", (src, sec) -> { door = 0f; return sync(src, sec); }));
             root.then(cage);
 
             dispatcher.register(root);
@@ -59,25 +66,37 @@ public final class MayhemCommands {
                                 FloatArgumentType.getFloat(ctx, "segundos"))));
     }
 
-    private static int moveDress(CommandSourceStack src, ShowMarks.Mark center,
-                                 double gap, float seconds) {
-        dressCenter = center;
-        dressGap = gap;
-        send(src.getServer(), new PropMovePayload("dress_l",
-                center.x() - gap, center.y(), center.z(), center.yaw(), (int) (seconds * 1000)));
-        send(src.getServer(), new PropMovePayload("dress_r",
-                center.x() + gap, center.y(), center.z(), center.yaw(), (int) (seconds * 1000)));
-        src.sendSuccess(() -> Component.literal(
-                "vestido em movimento (" + seconds + "s, vao " + gap + ")"), true);
+    /** Recalcula as seis pecas a partir de centro + angulos e transmite. */
+    private static int sync(CommandSourceStack src, float seconds) {
+        int ms = (int) (seconds * 1000);
+        var server = src.getServer();
+        double yawRad = Math.toRadians(center.yaw());
+        double c = Math.cos(yawRad), s = Math.sin(yawRad);
+
+        send(server, new PropMovePayload("dress_body",
+                center.x(), center.y(), center.z(), center.yaw(), ms));
+        // cortinas: posicao no ponto da dobradica (girado pelo rumo do grupo),
+        // rumo do grupo mais o giro de abertura para fora
+        sendHinged(server, "curtain_l", CL_X, CL_Z,  CURTAIN_SWING * curtain, c, s, ms);
+        sendHinged(server, "curtain_r", CR_X, CR_Z, -CURTAIN_SWING * curtain, c, s, ms);
+        send(server, new PropMovePayload("cage",
+                center.x(), center.y(), center.z(), center.yaw(), ms));
+        sendHinged(server, "cage_door", CD_X, CD_Z,  DOOR_SWING * door, c, s, ms);
+
+        src.sendSuccess(() -> Component.literal(String.format(
+                "cena em movimento (%.1fs) cortinas=%s gaiola=%s",
+                seconds, curtain > 0 ? "abertas" : "fechadas",
+                door > 0 ? "aberta" : "fechada")), true);
         return 1;
     }
 
-    private static int moveOne(CommandSourceStack src, String prop,
-                               ShowMarks.Mark m, float seconds) {
-        send(src.getServer(), new PropMovePayload(prop,
-                m.x(), m.y(), m.z(), m.yaw(), (int) (seconds * 1000)));
-        src.sendSuccess(() -> Component.literal(prop + " em movimento (" + seconds + "s)"), true);
-        return 1;
+    private static void sendHinged(MinecraftServer server, String prop,
+                                   double lx, double lz, float swing,
+                                   double c, double s, int ms) {
+        double wx = center.x() + lx * c + lz * s;
+        double wz = center.z() - lx * s + lz * c;
+        send(server, new PropMovePayload(prop, wx, center.y(), wz,
+                center.yaw() + swing, ms));
     }
 
     private static void send(MinecraftServer server, PropMovePayload payload) {
