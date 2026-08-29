@@ -24,15 +24,15 @@ import static net.minecraft.commands.Commands.literal;
 public final class MayhemCommands {
     public static final Map<String, PropMovePayload> STATE = new ConcurrentHashMap<>();
 
-    // no show a saia e icada: sobe ~5 m e se comprime num dossel com franja
-    // pairando sobre a gaiola, e a cantora fica em pe no topo dele
-    private static final double HOIST_RISE = 15.0;
-    private static final float HOIST_SQUASH = 0.45f;
+    // no show a franja do topo e fixa; o tecido da saia parte no meio e
+    // corre para os lados como cortina em trilho circular
+    private static final float CURTAIN_SLIDE = 60f;
     private static final float DOOR_SLIDE = 50f;
     private static final double LIFT_TOP = 26.0;
 
     private static ShowMarks.Mark center = ShowMarks.DRESS.get("backstage");
-    private static float hoist = 0f, door = 0f, lift = 0f;
+    private static float curtain = 0f, door = 0f;
+    private static float lift = 1f;   // elevador no topo por padrao
 
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> {
@@ -42,8 +42,8 @@ public final class MayhemCommands {
             var dress = literal("dress");
             ShowMarks.DRESS.forEach((name, m) -> dress.then(timed(name, 10f,
                     (src, sec) -> { center = m; return sync(src, sec); })));
-            dress.then(timed("open", 3f,  (src, sec) -> { hoist = 1f; return sync(src, sec); }));
-            dress.then(timed("close", 3f, (src, sec) -> { hoist = 0f; return sync(src, sec); }));
+            dress.then(timed("open", 2f,  (src, sec) -> { curtain = 1f; return sync(src, sec); }));
+            dress.then(timed("close", 2f, (src, sec) -> { curtain = 0f; return sync(src, sec); }));
             root.then(dress);
 
             var cage = literal("cage");
@@ -77,18 +77,16 @@ public final class MayhemCommands {
         var server = src.getServer();
         float yaw = center.yaw();
 
-        double rise = HOIST_RISE * hoist;
-        float squash = 1f - (1f - HOIST_SQUASH) * hoist;
-        at(server, "dress_body", rise, yaw, squash, ms);
-        at(server, "curtain_l", rise, yaw, squash, ms);
-        at(server, "curtain_r", rise, yaw, squash, ms);
+        at(server, "dress_body", 0, yaw, 1f, ms);
+        at(server, "curtain_l", 0, yaw + CURTAIN_SLIDE * curtain, 1f, ms);
+        at(server, "curtain_r", 0, yaw - CURTAIN_SLIDE * curtain, 1f, ms);
         at(server, "cage", 0, yaw, 1f, ms);
         at(server, "cage_door", 0, yaw + DOOR_SLIDE * door, 1f, ms);
         at(server, "lift", LIFT_TOP * lift, yaw, 1f, ms);
 
         src.sendSuccess(() -> Component.literal(String.format(
                 "cena (%.1fs) saia=%s gaiola=%s elevador=%s",
-                seconds, hoist > 0 ? "icada" : "baixada",
+                seconds, curtain > 0 ? "aberta" : "fechada",
                 door > 0 ? "aberta" : "fechada", lift > 0 ? "topo" : "base")), true);
         return 1;
     }

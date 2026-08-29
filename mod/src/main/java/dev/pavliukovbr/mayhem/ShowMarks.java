@@ -13,7 +13,7 @@ public final class ShowMarks {
     public static final Map<String, Mark> DRESS = Map.of(
         "backstage", new Mark(0.5, -60.0, 75.0, 180f),
         "portal",    new Mark(0.5, -54.0, 32.0, 180f),
-        "mainstage", new Mark(0.5, -54.0, 8.0, 180f)
+        "mainstage", new Mark(0.5, -54.0, 15.0, 180f)
     );
 
     private ShowMarks() {}
