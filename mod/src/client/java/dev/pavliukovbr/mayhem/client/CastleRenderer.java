@@ -29,7 +29,7 @@ public final class CastleRenderer {
     /** Ancora no mundo: casa com a ancora do datapack (0,-59,0), castelo centrado. */
     private static final double AX = 0.5, AY = -59.0, AZ = 25.5;
 
-    private static int program = -1, vao, vbo, ebo, tex, uMvp, uSun;
+    private static int program = -1, vao, vbo, ebo, tex, uMvp, uSun, uCam;
     private static int indexCount, frameNo;
     private static int fbo = -1, lastColor, lastDepth;
     private static boolean broken;
@@ -123,7 +123,10 @@ public final class CastleRenderer {
         float[] m = new float[16];
         mvp.get(m);
         GL33C.glUniformMatrix4fv(uMvp, false, m);
-        GL33C.glUniform3f(uSun, 0.35f, 0.85f, -0.40f);
+        // direcoes em espaco do modelo: o mundo gira PI em Y, entao x,z trocam de sinal
+        GL33C.glUniform3f(uSun, -0.35f, 0.85f, 0.40f);
+        GL33C.glUniform3f(uCam, (float) -(fr.mayhem$camX() - AX), (float) (fr.mayhem$camY() - AY),
+                (float) -(fr.mayhem$camZ() - AZ));
         GL33C.glBindVertexArray(vao);
         // 26.x usa reversed-Z: a func de depth que o jogo deixou e a certa
         // para a matriz que estamos usando. Nao tocar nela.
@@ -155,7 +158,7 @@ public final class CastleRenderer {
     private static void init() throws Exception {
         ByteBuffer bin = readResource("/assets/mayhem/castle/castle_mesh.bin");
         bin.order(ByteOrder.LITTLE_ENDIAN);
-        if (bin.getInt() != 0x4D534D32) throw new IllegalStateException("magic da mesh errado");
+        if (bin.getInt() != 0x4D534D33) throw new IllegalStateException("magic da mesh errado");
         int vcount = bin.getInt();
         indexCount = bin.getInt();
 
@@ -164,24 +167,27 @@ public final class CastleRenderer {
         ebo = GL33C.glGenBuffers();
         GL33C.glBindVertexArray(vao);
 
-        ByteBuffer verts = bin.slice(bin.position(), vcount * 36).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer verts = bin.slice(bin.position(), vcount * 40).order(ByteOrder.LITTLE_ENDIAN);
         GL33C.glBindBuffer(GL33C.GL_ARRAY_BUFFER, vbo);
         GL33C.glBufferData(GL33C.GL_ARRAY_BUFFER, verts, GL33C.GL_STATIC_DRAW);
-        bin.position(bin.position() + vcount * 36);
+        bin.position(bin.position() + vcount * 40);
         ByteBuffer idx = bin.slice(bin.position(), indexCount * 4).order(ByteOrder.LITTLE_ENDIAN);
         GL33C.glBindBuffer(GL33C.GL_ELEMENT_ARRAY_BUFFER, ebo);
         GL33C.glBufferData(GL33C.GL_ELEMENT_ARRAY_BUFFER, idx, GL33C.GL_STATIC_DRAW);
 
         GL33C.glEnableVertexAttribArray(0);
-        GL33C.glVertexAttribPointer(0, 3, GL33C.GL_FLOAT, false, 36, 0);
+        GL33C.glVertexAttribPointer(0, 3, GL33C.GL_FLOAT, false, 40, 0);
         GL33C.glEnableVertexAttribArray(1);
-        GL33C.glVertexAttribPointer(1, 3, GL33C.GL_FLOAT, false, 36, 12);
+        GL33C.glVertexAttribPointer(1, 3, GL33C.GL_FLOAT, false, 40, 12);
         GL33C.glEnableVertexAttribArray(2);
-        GL33C.glVertexAttribPointer(2, 3, GL33C.GL_FLOAT, false, 36, 24);
+        GL33C.glVertexAttribPointer(2, 3, GL33C.GL_FLOAT, false, 40, 24);
+        GL33C.glEnableVertexAttribArray(3);
+        GL33C.glVertexAttribPointer(3, 1, GL33C.GL_FLOAT, false, 40, 36);
         GL33C.glBindVertexArray(0);
 
         program = buildProgram();
         uMvp = GL33C.glGetUniformLocation(program, "uMvp");
+        uCam = GL33C.glGetUniformLocation(program, "uCam");
         uSun = GL33C.glGetUniformLocation(program, "uSun");
         MayhemShow.LOGGER.info("Castelo carregado: {} vertices, {} tris", vcount, indexCount / 3);
     }
@@ -190,22 +196,30 @@ public final class CastleRenderer {
         String vs = """
                 #version 150
                 uniform mat4 uMvp;
-                in vec3 aPos; in vec3 aNormal; in vec3 aColor;
-                out vec3 vNormal; out vec3 vColor;
+                in vec3 aPos; in vec3 aNormal; in vec3 aColor; in float aAo;
+                out vec3 vNormal; out vec3 vColor; out vec3 vPos; out float vAo;
                 void main() {
                     gl_Position = uMvp * vec4(aPos, 1.0);
-                    vNormal = aNormal; vColor = aColor;
+                    vNormal = aNormal; vColor = aColor; vPos = aPos; vAo = aAo;
                 }""";
         String fs = """
                 #version 150
-                uniform vec3 uSun;
-                in vec3 vNormal; in vec3 vColor;
+                uniform vec3 uSun; uniform vec3 uCam;
+                in vec3 vNormal; in vec3 vColor; in vec3 vPos; in float vAo;
                 out vec4 fragColor;
                 void main() {
-                    float l = 0.55 + 0.45 * max(dot(normalize(vNormal), normalize(uSun)), 0.0);
-                    // cor do bake e linear; o framebuffer espera sRGB
-                    vec3 c = pow(vColor * l, vec3(1.0 / 2.2));
-                    fragColor = vec4(c, 1.0);
+                    vec3 n = normalize(vNormal);
+                    // hemisferica (ceu por cima, chao escuro), sol, fill fraca
+                    float hemi = mix(0.28, 0.60, n.y * 0.5 + 0.5);
+                    float sun  = 0.55 * max(dot(n, normalize(uSun)), 0.0);
+                    float fill = 0.16 * max(dot(n, normalize(vec3(-uSun.x, 0.25, -uSun.z))), 0.0);
+                    // AO bakeada e o que faz o entalhe aparecer
+                    float ao = 0.22 + 0.78 * pow(max(vAo, 0.0), 0.7);
+                    // rim descola a silhueta do telao preto
+                    vec3 v = normalize(uCam - vPos);
+                    float rim = 0.14 * pow(1.0 - max(dot(n, v), 0.0), 3.0);
+                    vec3 c = vColor * (hemi + sun + fill) * ao + rim * vec3(0.85, 0.83, 0.78);
+                    fragColor = vec4(pow(c, vec3(1.0 / 2.2)), 1.0);
                 }""";
         int v = compile(GL33C.GL_VERTEX_SHADER, vs);
         int f = compile(GL33C.GL_FRAGMENT_SHADER, fs);
@@ -215,6 +229,7 @@ public final class CastleRenderer {
         GL33C.glBindAttribLocation(p, 0, "aPos");
         GL33C.glBindAttribLocation(p, 1, "aNormal");
         GL33C.glBindAttribLocation(p, 2, "aColor");
+        GL33C.glBindAttribLocation(p, 3, "aAo");
         GL33C.glLinkProgram(p);
         if (GL33C.glGetProgrami(p, GL33C.GL_LINK_STATUS) == 0)
             throw new IllegalStateException("link: " + GL33C.glGetProgramInfoLog(p));

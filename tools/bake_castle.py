@@ -47,6 +47,17 @@ src.select_set(True); dst.select_set(True)
 bpy.context.view_layer.objects.active = dst
 bpy.ops.object.bake(type='DIFFUSE')
 
+# segundo passe: ambient occlusion do proprio decimado, por vertice.
+# E o que faz o entalhe aparecer numa superficie monocromatica.
+ao = dst.data.color_attributes.new(name="AO", type='BYTE_COLOR', domain='CORNER')
+dst.data.color_attributes.active_color = ao
+sc.render.bake.use_selected_to_active = False
+sc.cycles.samples = 32
+bpy.context.scene.world = bpy.data.worlds.new("w")
+bpy.ops.object.select_all(action='DESELECT')
+dst.select_set(True); bpy.context.view_layer.objects.active = dst
+bpy.ops.object.bake(type='AO')
+
 
 # escala real, origem no chao, exporta so a mesh decimada
 bpy.data.objects.remove(src, do_unlink=True)
