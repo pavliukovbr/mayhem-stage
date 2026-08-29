@@ -27,7 +27,7 @@ import java.nio.ByteOrder;
  */
 public final class CastleRenderer {
     /** Ancora no mundo: casa com a ancora do datapack (0,-59,0), castelo centrado. */
-    private static final double AX = 0.5, AY = -59.0, AZ = 25.5;
+    private static final double AX = 0.5, AY = -54.0, AZ = 37.8;
 
     private static int program = -1, vao, vbo, ebo, tex, uMvp, uSun, uCam;
     private static int indexCount, frameNo;

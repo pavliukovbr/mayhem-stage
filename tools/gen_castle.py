@@ -172,52 +172,83 @@ def arch():
     return ops
 
 # ----------------------------------------------------------------- resto
+# O palco real e elevado ~2 m: seis camadas de bloco, fascia preta fosca,
+# topo preto brilhante e friso de LED vermelho na borda frontal.
+DECK_TOP = 4   # topo do deck; jogador pisa em y=5
+
 def deck():
-    ops=[F(-72,-1,0,72,-1,53,BLACKC)]
-    ops.append(F(-72,-1,0,-72,-1,53,BLACKP))
-    ops.append(F(72,-1,0,72,-1,53,BLACKP))
-    ops.append(F(-72,-1,53,72,-1,53,BLACKP))
-    ops.append(F(-72,-1,0,-14,-1,0,BLACKP))
-    ops.append(F(14,-1,0,72,-1,0,BLACKP))
+    ops=[]
+    for y in range(-1, DECK_TOP):
+        ops.append(F(-72,y,0,72,y,53,VELVET))
+    ops.append(F(-72,DECK_TOP,0,72,DECK_TOP,53,BLACKC))
+    # friso de LED vermelho na borda frontal do topo, aberto na passarela
+    ops.append(F(-72,DECK_TOP,0,-14,DECK_TOP,0,REDC))
+    ops.append(F(14,DECK_TOP,0,72,DECK_TOP,0,REDC))
     return ops
 
 def plinths():
     ops=[]
     for sx in (-1,1):
-        ops.append(F(sx*16,0,3,sx*24,4,11,SMOOTH))
-        ops.append(F(sx*16,2,3,sx*24,3,3,CHISEL))
-        ops.append(F(sx*16,5,3,sx*24,5,11,SLAB))
+        ops.append(F(sx*16,5,3,sx*24,9,11,SMOOTH))
+        ops.append(F(sx*16,7,3,sx*24,8,3,CHISEL))
+        ops.append(F(sx*16,10,3,sx*24,10,11,SLAB))
     return ops
 
-# passarela: perfil da V01 (metades de largura por metro), triplicado
-HW = [4,7,8,9,10,11,11,11,11,11,11,10,9,8,7,4]
+# passarela elevada terminando em crescente: circulo central + bracos em
+# anel que curvam de volta na direcao do palco, como na vista aerea
+import math as _m
+ZC, RC, RIN, ROUT, ZARM = -104, 15, 33, 51, -64
+
+def _in_head(x, z):
+    d1 = _m.hypot(x, z - ZC)
+    if d1 <= RC: return True
+    return RIN <= d1 <= ROUT and z <= ZARM
+
 def runway():
-    ops=[F(-13,-1,-84,-13,-1,-1,REDC), F(13,-1,-84,13,-1,-1,REDC),
-         F(-12,-1,-84,12,-1,-1,BLACKC)]
-    for z in range(-85,-133,-1):
-        w = HW[(abs(z)-85)//3]*3 + 1
-        ops.append(F(-w,-1,z,w,-1,z,REDC))
-        ops.append(F(-(w-1),-1,z,w-1,-1,z,BLACKC))
+    ops=[]
+    for y in range(-1, DECK_TOP):
+        ops.append(F(-13,y,-90,13,y,-1,VELVET))
+    ops.append(F(-12,DECK_TOP,-90,12,DECK_TOP,-1,BLACKC))
+    ops.append(F(-13,DECK_TOP,-90,-13,DECK_TOP,-1,REDC))
+    ops.append(F(13,DECK_TOP,-90,13,DECK_TOP,-1,REDC))
+    for z in range(-53, -156, -1):
+        runs=[]
+        x=-52
+        while x <= 52:
+            if _in_head(x, z):
+                x0=x
+                while x <= 52 and _in_head(x, z): x += 1
+                runs.append((x0, x-1))
+            else:
+                x += 1
+        for x0,x1 in runs:
+            for y in range(-1, DECK_TOP):
+                ops.append(F(x0,y,z,x1,y,z,VELVET))
+            for x2 in range(x0, x1+1):
+                border = (not _in_head(x2-1,z)) or (not _in_head(x2+1,z)) \
+                      or (not _in_head(x2,z-1)) or (not _in_head(x2,z+1))
+                ops.append(S(x2,DECK_TOP,z, REDC if border else BLACKC))
     return ops
 
 def led_wall():
-    ops=[F(-94,-1,54,94,2,56,BLACKP)]                    # base ate o chao
-    ops.append(F(-94,3,55,94,56,56,VELVET))              # corpo
-    ops.append(F(-93,4,54,93,55,54,VELVET))              # face
-    ops.append(F(-94,3,54,94,3,54,WHITEC))               # moldura line art
-    ops.append(F(-94,56,54,94,56,54,WHITEC))
-    ops.append(F(-94,3,54,-94,56,54,WHITEC))
-    ops.append(F(94,3,54,94,56,54,WHITEC))
-    ops.append(F(-94,57,54,94,57,56,BLACKP))             # vareta de luzes
+    # nasce no nivel do deck, com fascia ate o chao
+    ops=[F(-94,-1,54,94,4,56,BLACKP)]
+    ops.append(F(-94,5,55,94,58,56,VELVET))
+    ops.append(F(-93,6,54,93,57,54,VELVET))
+    ops.append(F(-94,5,54,94,5,54,WHITEC))
+    ops.append(F(-94,58,54,94,58,54,WHITEC))
+    ops.append(F(-94,5,54,-94,58,54,WHITEC))
+    ops.append(F(94,5,54,94,58,54,WHITEC))
+    ops.append(F(-94,59,54,94,59,56,BLACKP))
     for x in range(-92,93,4):
-        ops.append(S(x,58,55,REDC))
+        ops.append(S(x,60,55,REDC))
     return ops
 
 def clear():
     ops=[]
-    for y in range(-1,61):
-        ops.append(F(-96,y,-134,96,y,-36,"minecraft:air"))
-        ops.append(F(-96,y,-35,96,y,62,"minecraft:air"))
+    for y in range(-1,63):
+        ops.append(F(-96,y,-160,96,y,-50,"minecraft:air"))
+        ops.append(F(-96,y,-49,96,y,62,"minecraft:air"))
     return ops
 
 # ------------------------------------------------------------------ saida
