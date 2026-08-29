@@ -5,11 +5,12 @@ decimado ganha UV novo (Smart UV Project) e recebe a cor do original por
 bake selected->active. Sai: sources/castle_game.glb + baked 2048 direto
 nos assets do mod.
 """
-import bpy
+import bpy, os
 
-SRC = "/Users/joseph/Desktop/CLAUDE-CODE/mayhem-stage/sources/castle_master.glb"
-DST = "/Users/joseph/Desktop/CLAUDE-CODE/mayhem-stage/sources/castle_game.glb"
-TEXOUT = "/Users/joseph/Desktop/CLAUDE-CODE/mayhem-stage/mod/src/client/resources/assets/mayhem/castle/castle_basecolor.png"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC = os.path.join(ROOT, "sources", "castle_master.glb")
+DST = os.path.join(ROOT, "sources", "castle_game.glb")
+TEXOUT = os.path.join(ROOT, "mod", "src", "client", "resources", "assets", "mayhem", "castle", "castle_basecolor.png")
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=SRC)

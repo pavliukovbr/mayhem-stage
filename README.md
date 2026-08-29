@@ -1,74 +1,70 @@
 # Mayhem Stage
 
-Palco de concerto para Minecraft Java Edition, versao alvo **26.2**.
-A planta tecnica esta em [MAYHEM_STAGE_V01.md](MAYHEM_STAGE_V01.md).
+Projeto de concerto dentro do Minecraft Java Edition. A ideia e montar um show
+completo no mapa: palco de teatro barroco, telao, passarela com bordas de LED,
+luzes sincronizadas com a musica e publico entrando por multiplayer. Este
+repositorio guarda o palco, que e a primeira fase.
 
-## Rodar o blockout
+O castelo da fachada nao e feito de blocos. Ele e um modelo 3D de 300 mil
+triangulos que o mod desenha direto na cena, ancorado no palco, com bake de
+cor e oclusao por vertice. Blocos ficam por conta do chao, da passarela e do
+telao, que sao as partes onde alguem pisa ou que viram tela depois.
 
-1. Abra o Minecraft **26.2** uma vez no launcher. Isso baixa o jar do cliente,
-   de onde sai o `pack_format` correto.
-2. Gere o `pack.mcmeta`:
+Alvo: Minecraft **26.2** com Fabric. Escala do cenario: 3 blocos por metro,
+com o palco real de 15,2 m virando 45 blocos de altura.
+
+## Como rodar
+
+1. Abra o Minecraft 26.2 uma vez no launcher para baixar o jar do cliente.
+2. Gere o `pack.mcmeta` do datapack:
 
    ```bash
    ./tools/set_pack_format.sh 26.2
    ```
 
-3. Crie um mundo **superflat, criativo, sem estruturas**. O blockout assume a
-   grama do superflat em `Y -61`.
+3. Crie um mundo superflat criativo sem estruturas.
 4. Instale o datapack no save:
 
    ```bash
    ./tools/install.sh "NomeDoMundo"
    ```
 
-5. No jogo:
+5. Compile o mod e copie para a pasta `mods/` do seu launcher com Fabric
+   Loader e Fabric API instalados:
+
+   ```bash
+   cd mod && ./gradlew build
+   ```
+
+6. No jogo:
 
    ```mcfunction
    /reload
    /function mayhem:build_blockout
    ```
 
-   Para reconstruir depois de mudar o gerador ou os modulos:
-   `/function mayhem:demolish` e depois `/function mayhem:build_blockout`.
+   Para reconstruir depois de mudar algo, rode antes
+   `/function mayhem:demolish`, que limpa somente o envelope do palco.
 
-Voce vai aparecer perto de `X 0, Z 0`, que e a boca de cena. Olhe para `+Z` para
-ver a fachada e para `-Z` para ver a passarela.
+O castelo aparece sozinho quando o mod esta carregado. Ele ainda nao tem
+colisao, entao da para atravessar andando.
 
 ## Estrutura
 
 ```
-datapack/                    o datapack instalavel
-  pack.mcmeta.template       vira pack.mcmeta com o numero real da versao
-  data/mayhem/function/
-    build_blockout.mcfunction   ancora do palco no mundo, uma linha so
-    demolish.mcfunction         limpa o envelope do palco para reconstruir
-    blockout/                   um arquivo por modulo do palco
-tools/gen_castle.py          gera os modulos do castelo; nao editar os gerados
-tools/set_pack_format.sh     le o pack_format do jar da versao
-tools/install.sh             copia o datapack para um save
-sources/                     material de referencia, nao alterar, fora do git
+datapack/   palco em blocos: deck, passarela, plintos e telao
+mod/        mod Fabric: materiais do palco e renderer do castelo 3D
+tools/      geradores do blockout, texturas e pipeline do modelo no Blender
+sources/    arquivos de trabalho pesados, fora do git
 ```
 
-## Mod Fabric (mod/)
+A planta tecnica com medidas e decisoes esta em
+[MAYHEM_STAGE_V01.md](MAYHEM_STAGE_V01.md).
 
-O mod `mayhem-show` e quem transforma o mapa em concerto: relogio de show no
-servidor, cues por musica em JSON, luzes, telao e efeitos renderizados no
-cliente. Alvo: Minecraft 26.2, Fabric Loader 0.19.5, Fabric API 0.158.0+26.2,
-Java 25. A era 26.x vem sem ofuscacao, entao o build nao tem linha de
-mappings.
+## Sobre os assets
 
-```bash
-cd mod && JAVA_HOME=/opt/homebrew/opt/openjdk@25 ./gradlew build
-```
-
-`./gradlew runClient` abre um cliente de teste com o mod carregado.
-
-## Estado
-
-Blockout giga V03 no datapack (3 blocos = 1 m) e esqueleto do mod compilando.
-Ainda nao existem modelos Blockbench nem o sistema de cues; e o proximo passo.
-
-## Licenca e assets
-
-Nada de musica, video, logo ou arte protegida entra neste repositorio. A versao
-publica usa material original ou licenciado.
+O modelo do castelo foi gerado no Meshy a partir de referencias visuais do
+cenario e processado no Blender: decimacao, bake de cor do modelo denso para
+cor por vertice e bake de oclusao. As texturas dos blocos sao desenhadas por
+script neste repositorio. Nada aqui usa material oficial de artista ou
+gravadora, e musica nao acompanha o projeto.
