@@ -23,6 +23,7 @@ public class MayhemShow implements ModInitializer {
         StageBlocks.init();
         PayloadTypeRegistry.clientboundPlay().register(PropMovePayload.TYPE, PropMovePayload.CODEC);
         MayhemCommands.register();
+        ShowPhysics.init();
         // quem entra no meio do show recebe o ultimo estado de cada prop
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 MayhemCommands.STATE.values().forEach(p ->

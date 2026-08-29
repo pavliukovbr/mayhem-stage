@@ -10,7 +10,7 @@ import math, struct, io
 
 H, R = 22.0, 8.0
 BARS, SIDES = 28, 6
-RINGS = (0.3, 5.5, 11.0, 16.5, 21.7)
+RINGS = (0.3, 11.0, 21.7)   # dois andares: piso, meia-altura e topo
 STEEL = (0.40, 0.41, 0.44)
 DOOR_HALF = math.radians(26)
 FRONT = math.pi/2
@@ -48,23 +48,48 @@ def in_door(ang):
     d = (ang - FRONT + math.pi) % (2*math.pi) - math.pi
     return abs(d) <= DOOR_HALF
 
-def build(door):
+def in_half(ang, side):
+    """side -1: metade direita do vao; +1: metade esquerda."""
+    d = (ang - FRONT + math.pi) % (2*math.pi) - math.pi
+    return abs(d) <= DOOR_HALF and (d >= 0) == (side > 0)
+
+def build(part):
+    """part: None = corpo; -1/+1 = metade do portao."""
     verts.clear(); idxs.clear()
     for b in range(BARS):
         ang = 2*math.pi*b/BARS
-        if in_door(ang) != door: continue
+        if part is None and in_door(ang): continue
+        if part is not None and not in_half(ang, part): continue
         tube([(R*math.cos(ang), 0, R*math.sin(ang)),
               (R*math.cos(ang), H, R*math.sin(ang))], 0.09, STEEL)
     for hy in RINGS:
         arc=[]
-        for s in range(121):
-            a=2*math.pi*s/120
-            if in_door(a) != door:
+        for s in range(161):
+            a=2*math.pi*s/160
+            keep = (not in_door(a)) if part is None else in_half(a, part)
+            if not keep:
                 if len(arc) > 1: tube(arc, 0.11, STEEL)
                 arc=[]
                 continue
             arc.append((R*math.cos(a), hy, R*math.sin(a)))
         if len(arc) > 1: tube(arc, 0.11, STEEL)
+    if part is None:
+        # piso do segundo andar: disco de aco escuro
+        base=len(verts)
+        verts.append((0, 11.0, 0, 0,1,0, 0.16,0.16,0.18, 1.0))
+        for s in range(49):
+            a=2*math.pi*s/48
+            verts.append(((R-0.25)*math.cos(a), 11.0, (R-0.25)*math.sin(a),
+                          0,1,0, 0.20,0.20,0.22, 1.0))
+        for s in range(48):
+            idxs.extend((base, base+1+s, base+2+s))
+    else:
+        # origem na dobradica: borda EXTERNA do vao (portao abre para fora)
+        ha = FRONT + part*DOOR_HALF
+        hx, hz = R*math.cos(ha), R*math.sin(ha)
+        for i,v in enumerate(verts):
+            verts[i] = (v[0]-hx, v[1], v[2]-hz) + v[3:]
+        print(f"HINGE side={part} game_local=({hx:.3f}, {hz:.3f})")
 
 def write(name):
     out=io.BytesIO()
@@ -74,8 +99,9 @@ def write(name):
     open(f'mod/src/client/resources/assets/mayhem/meshes/{name}.bin','wb').write(out.getvalue())
     print(f"{name}.bin: {len(verts)} verts, {len(idxs)//3} tris")
 
-build(False); write("cage")
-build(True);  write("cage_door")
+build(None); write("cage")
+build(+1); write("cage_door_l")
+build(-1); write("cage_door_r")
 
 # elevador: disco com borda dourada e piso escuro
 verts.clear(); idxs.clear()

@@ -27,8 +27,11 @@ public final class MayhemCommands {
     // no show a franja do topo e fixa; o tecido da saia parte no meio e
     // corre para os lados como cortina em trilho circular
     private static final float CURTAIN_SLIDE = 60f;
-    private static final float DOOR_SLIDE = 50f;
-    private static final double LIFT_TOP = 26.0;
+    private static final float DOOR_SWING = 115f;
+    private static final double LIFT_TOP = 20.0;   // para antes da franja
+    // dobradicas dos portoes, coordenadas locais da gaiola
+    private static final double DL_X = -3.507, DL_Z = 7.190;
+    private static final double DR_X =  3.507, DR_Z = 7.190;
 
     private static ShowMarks.Mark center = ShowMarks.DRESS.get("backstage");
     private static float curtain = 0f, door = 0f;
@@ -77,18 +80,34 @@ public final class MayhemCommands {
         var server = src.getServer();
         float yaw = center.yaw();
 
+        double yr = Math.toRadians(yaw);
+        double c = Math.cos(yr), sn = Math.sin(yr);
         at(server, "dress_body", 0, yaw, 1f, ms);
-        at(server, "curtain_l", 0, yaw + CURTAIN_SLIDE * curtain, 1f, ms);
-        at(server, "curtain_r", 0, yaw - CURTAIN_SLIDE * curtain, 1f, ms);
+        at(server, "curtain_l", 0, yaw - CURTAIN_SLIDE * curtain, 1f, ms);
+        at(server, "curtain_r", 0, yaw + CURTAIN_SLIDE * curtain, 1f, ms);
         at(server, "cage", 0, yaw, 1f, ms);
-        at(server, "cage_door", 0, yaw + DOOR_SLIDE * door, 1f, ms);
+        hinged(server, "cage_door_l", DL_X, DL_Z, yaw - DOOR_SWING * door, c, sn, ms);
+        hinged(server, "cage_door_r", DR_X, DR_Z, yaw + DOOR_SWING * door, c, sn, ms);
         at(server, "lift", LIFT_TOP * lift, yaw, 1f, ms);
+        ShowPhysics.onSync(center, lift, ms);
 
         src.sendSuccess(() -> Component.literal(String.format(
                 "cena (%.1fs) saia=%s gaiola=%s elevador=%s",
                 seconds, curtain > 0 ? "aberta" : "fechada",
                 door > 0 ? "aberta" : "fechada", lift > 0 ? "topo" : "base")), true);
         return 1;
+    }
+
+    private static void hinged(MinecraftServer server, String prop,
+                               double lx, double lz, float yaw,
+                               double c, double sn, int ms) {
+        double wx = center.x() + lx * c + lz * sn;
+        double wz = center.z() - lx * sn + lz * c;
+        var payload = new PropMovePayload(prop, wx, center.y(), wz, yaw, 1f, ms);
+        STATE.put(prop, payload);
+        for (var player : PlayerLookup.all(server)) {
+            ServerPlayNetworking.send(player, payload);
+        }
     }
 
     private static void at(MinecraftServer server, String prop,

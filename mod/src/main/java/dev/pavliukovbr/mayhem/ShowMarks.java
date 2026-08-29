@@ -11,9 +11,9 @@ public final class ShowMarks {
 
     /** O vestido e um grupo: duas metades que andam juntas e abrem no eixo X. */
     public static final Map<String, Mark> DRESS = Map.of(
-        "backstage", new Mark(0.5, -60.0, 75.0, 180f),
-        "portal",    new Mark(0.5, -54.0, 32.0, 180f),
-        "mainstage", new Mark(0.5, -54.0, 15.0, 180f)
+        "backstage", new Mark(0.5, -60.5, 75.0, 180f),
+        "portal",    new Mark(0.5, -54.5, 32.0, 180f),
+        "mainstage", new Mark(0.5, -54.5, 15.0, 180f)
     );
 
     private ShowMarks() {}

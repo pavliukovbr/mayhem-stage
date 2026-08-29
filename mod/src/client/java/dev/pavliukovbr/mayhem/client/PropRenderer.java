@@ -67,12 +67,13 @@ public final class PropRenderer {
         // 1 m para o topo do vao do arco). Escala no render resolve, e as
         // cortinas vao 2% para fora para nao brigar com a superficie do corpo.
         float DS = 27f / 15f;
-        PROPS.put("castle",     new Prop("/assets/mayhem/meshes/castle.bin",     0.5, -54.0, 37.8, 180f));
+        PROPS.put("castle",     new Prop("/assets/mayhem/meshes/castle.bin",     0.5, -54.5, 37.8, 180f));
         PROPS.put("dress_body", new Prop("/assets/mayhem/meshes/dress_body.bin", 0.5, -60.0, 75.0, 180f).scaled(DS));
         PROPS.put("curtain_l",  new Prop("/assets/mayhem/meshes/curtain_l.bin",  0.5, -60.0, 75.0, 180f).scaled(DS * 1.02f));
         PROPS.put("curtain_r",  new Prop("/assets/mayhem/meshes/curtain_r.bin",  0.5, -60.0, 75.0, 180f).scaled(DS * 1.02f));
         PROPS.put("cage",       new Prop("/assets/mayhem/meshes/cage.bin",       0.5, -60.0, 75.0, 180f));
-        PROPS.put("cage_door",  new Prop("/assets/mayhem/meshes/cage_door.bin",  0.5, -60.0, 75.0, 180f));
+        PROPS.put("cage_door_l", new Prop("/assets/mayhem/meshes/cage_door_l.bin", 0.5, -60.0, 75.0, 180f));
+        PROPS.put("cage_door_r", new Prop("/assets/mayhem/meshes/cage_door_r.bin", 0.5, -60.0, 75.0, 180f));
         PROPS.put("lift",       new Prop("/assets/mayhem/meshes/lift.bin",       0.5, -60.0, 75.0, 180f));
     }
 
