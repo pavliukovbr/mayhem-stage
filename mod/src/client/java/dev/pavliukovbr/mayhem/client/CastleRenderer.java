@@ -210,14 +210,14 @@ public final class CastleRenderer {
                 void main() {
                     vec3 n = normalize(vNormal);
                     // hemisferica (ceu por cima, chao escuro), sol, fill fraca
-                    float hemi = mix(0.28, 0.60, n.y * 0.5 + 0.5);
-                    float sun  = 0.55 * max(dot(n, normalize(uSun)), 0.0);
+                    float hemi = mix(0.34, 0.62, n.y * 0.5 + 0.5);
+                    float sun  = 0.45 * max(dot(n, normalize(uSun)), 0.0);
                     float fill = 0.16 * max(dot(n, normalize(vec3(-uSun.x, 0.25, -uSun.z))), 0.0);
                     // AO bakeada e o que faz o entalhe aparecer
-                    float ao = 0.22 + 0.78 * pow(max(vAo, 0.0), 0.7);
+                    float ao = 0.38 + 0.62 * pow(max(vAo, 0.0), 0.55);
                     // rim descola a silhueta do telao preto
                     vec3 v = normalize(uCam - vPos);
-                    float rim = 0.14 * pow(1.0 - max(dot(n, v), 0.0), 3.0);
+                    float rim = 0.05 * pow(1.0 - max(dot(n, v), 0.0), 4.0);
                     vec3 c = vColor * (hemi + sun + fill) * ao + rim * vec3(0.85, 0.83, 0.78);
                     fragColor = vec4(pow(c, vec3(1.0 / 2.2)), 1.0);
                 }""";

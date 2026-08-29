@@ -21,8 +21,9 @@ src.select_set(True); bpy.context.view_layer.objects.active = src
 bpy.ops.object.duplicate()
 dst = bpy.context.view_layer.objects.active
 tris = sum(len(p.vertices)-2 for p in dst.data.polygons)
-mod = dst.modifiers.new("dec", 'DECIMATE'); mod.ratio = 150000/tris
+mod = dst.modifiers.new("dec", 'DECIMATE'); mod.ratio = 300000/tris
 bpy.ops.object.modifier_apply(modifier="dec")
+
 
 # alvo do bake: cor por vertice (UV de decimado vira confete de ilhas
 # sub-texel; 213k vertices carregam o marfim melhor que qualquer atlas)
@@ -53,10 +54,18 @@ ao = dst.data.color_attributes.new(name="AO", type='BYTE_COLOR', domain='CORNER'
 dst.data.color_attributes.active_color = ao
 sc.render.bake.use_selected_to_active = False
 sc.cycles.samples = 32
-bpy.context.scene.world = bpy.data.worlds.new("w")
+w = bpy.data.worlds.new("w")
+bpy.context.scene.world = w
+try:
+    w.light_settings.distance = 0.8
+except Exception as e:
+    print("sem light_settings.distance:", e)
 bpy.ops.object.select_all(action='DESELECT')
 dst.select_set(True); bpy.context.view_layer.objects.active = dst
 bpy.ops.object.bake(type='AO')
+# NOTA: corrective smooth e shade_smooth foram testados e produzem
+# normais corrompidas em triangulos degenerados da decimacao (manchas
+# pretas rasgadas). Flat shading e o caminho estavel para esta malha.
 
 
 # escala real, origem no chao, exporta so a mesh decimada
