@@ -1,7 +1,9 @@
 package dev.pavliukovbr.mayhem.client;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import dev.pavliukovbr.mayhem.MayhemShow;
+import dev.pavliukovbr.mayhem.PropMovePayload;
 
 /**
  * Lado cliente: renderizacao de tudo que e efemero — luzes, feixes,
@@ -11,6 +13,10 @@ import dev.pavliukovbr.mayhem.MayhemShow;
 public class MayhemShowClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(PropMovePayload.TYPE, (payload, ctx) ->
+                ctx.client().execute(() -> PropRenderer.moveProp(payload.prop(),
+                        payload.x(), payload.y(), payload.z(),
+                        payload.yaw(), payload.durationMs())));
         MayhemShow.LOGGER.info("Mayhem Show client pronto para renderizar.");
     }
 }

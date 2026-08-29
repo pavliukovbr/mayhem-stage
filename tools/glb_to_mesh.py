@@ -3,9 +3,12 @@
 
 COLOR_1 = cor difusa bakeada do high-poly (linear); COLOR_2 = AO propria do
 decimado. COLOR_0 e o branco herdado do Meshy e e ignorado.
+
+Uso: python3 tools/glb_to_mesh.py <nome>   (default: castle)
 """
-import json, struct, io, os
-f=open('sources/castle_game.glb','rb').read()
+import json, struct, io, os, sys
+NAME = sys.argv[1] if len(sys.argv) > 1 else "castle"
+f=open(f'sources/{NAME}_game.glb','rb').read()
 jlen,_=struct.unpack('<II',f[12:20]); g=json.loads(f[20:20+jlen]); boff=20+jlen+8
 def buf(i):
     v=g['bufferViews'][i]; s=boff+v.get('byteOffset',0); return f[s:s+v['byteLength']]
@@ -28,5 +31,7 @@ out=io.BytesIO(); out.write(struct.pack('<III',0x4D534D33,len(pos),len(idx)))
 for P,N,C,A in zip(pos,nrm,col,ao):
     out.write(struct.pack('<10f',P[0],P[1],P[2],N[0],N[1],N[2],C[0],C[1],C[2],A[0]))
 for i in idx: out.write(struct.pack('<I',i))
-open('mod/src/client/resources/assets/mayhem/castle/castle_mesh.bin','wb').write(out.getvalue())
-print('mesh.bin v3:', len(pos),'verts,', len(idx)//3,'tris')
+outdir='mod/src/client/resources/assets/mayhem/meshes'
+os.makedirs(outdir, exist_ok=True)
+open(f'{outdir}/{NAME}.bin','wb').write(out.getvalue())
+print(f'{NAME}.bin v3:', len(pos),'verts,', len(idx)//3,'tris')

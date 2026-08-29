@@ -2,7 +2,7 @@ package dev.pavliukovbr.mayhem.client.mixin;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
-import dev.pavliukovbr.mayhem.client.CastleRenderer;
+import dev.pavliukovbr.mayhem.client.PropRenderer;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
@@ -19,6 +19,6 @@ public class LevelRendererMixin {
     private void mayhem$afterRender(GraphicsResourceAllocator alloc, DeltaTracker delta,
             boolean blockOutline, CameraRenderState camera, Matrix4fc frustumMatrix,
             GpuBufferSlice projection, Vector4f fogColor, boolean sky, CallbackInfo ci) {
-        CastleRenderer.render(camera);
+        PropRenderer.render(camera);
     }
 }

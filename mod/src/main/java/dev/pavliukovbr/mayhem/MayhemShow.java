@@ -1,6 +1,9 @@
 package dev.pavliukovbr.mayhem;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +21,12 @@ public class MayhemShow implements ModInitializer {
     @Override
     public void onInitialize() {
         StageBlocks.init();
+        PayloadTypeRegistry.clientboundPlay().register(PropMovePayload.TYPE, PropMovePayload.CODEC);
+        MayhemCommands.register();
+        // quem entra no meio do show recebe o ultimo estado de cada prop
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
+                MayhemCommands.STATE.values().forEach(p ->
+                        ServerPlayNetworking.send(handler.getPlayer(), p)));
         LOGGER.info("Mayhem Show carregado. O relogio do show pertence ao servidor.");
     }
 }
