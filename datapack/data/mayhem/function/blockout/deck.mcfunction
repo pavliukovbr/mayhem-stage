@@ -6,5 +6,5 @@ fill ~-72 ~1 ~0 ~72 ~1 ~53 mayhem:velvet_black
 fill ~-72 ~2 ~0 ~72 ~2 ~53 mayhem:velvet_black
 fill ~-72 ~3 ~0 ~72 ~3 ~53 mayhem:velvet_black
 fill ~-72 ~4 ~0 ~72 ~4 ~53 mayhem:gloss_black
-fill ~-72 ~4 ~0 ~-14 ~4 ~0 mayhem:led_red
-fill ~14 ~4 ~0 ~72 ~4 ~0 mayhem:led_red
+fill ~-72 ~4 ~0 ~-11 ~4 ~0 mayhem:led_red
+fill ~11 ~4 ~0 ~72 ~4 ~0 mayhem:led_red

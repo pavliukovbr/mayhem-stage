@@ -32,8 +32,9 @@ public final class PropRenderer {
         int vao = -1, indexCount;
         double sx, sy, sz, tx, ty, tz;    // origem e destino do movimento
         float syaw, tyaw;                  // rotacao tambem anima
-        float sSy = 1f, tSy = 1f;          // escala vertical: a saia icada comprime
+        float sSy = 1f, tSy = 1f;
         float scale = 1f;
+        float yOff = 0f;   // offset de solo: afunda a base visual no piso
         long moveStart; int moveDur;       // ms
 
         Prop(String meshPath, double x, double y, double z, float yaw) {
@@ -42,6 +43,7 @@ public final class PropRenderer {
         }
 
         Prop scaled(float s) { scale = s; return this; }
+        Prop grounded(float y) { yOff = y; return this; }
 
         void moveTo(double x, double y, double z, float yaw, float scaleY, int durMs) {
             double[] now = pos();
@@ -67,10 +69,10 @@ public final class PropRenderer {
         // 1 m para o topo do vao do arco). Escala no render resolve, e as
         // cortinas vao 2% para fora para nao brigar com a superficie do corpo.
         float DS = 27f / 15f;
-        PROPS.put("castle",     new Prop("/assets/mayhem/meshes/castle.bin",     0.5, -54.5, 37.8, 180f));
-        PROPS.put("dress_body", new Prop("/assets/mayhem/meshes/dress_body.bin", 0.5, -60.0, 75.0, 180f).scaled(DS));
-        PROPS.put("curtain_l",  new Prop("/assets/mayhem/meshes/curtain_l.bin",  0.5, -60.0, 75.0, 180f).scaled(DS * 1.02f));
-        PROPS.put("curtain_r",  new Prop("/assets/mayhem/meshes/curtain_r.bin",  0.5, -60.0, 75.0, 180f).scaled(DS * 1.02f));
+        PROPS.put("castle",     new Prop("/assets/mayhem/meshes/castle.bin",     0.5, -54.0, 37.8, 180f).grounded(-1.2f));
+        PROPS.put("dress_body", new Prop("/assets/mayhem/meshes/dress_body.bin", 0.5, -60.0, 75.0, 180f).scaled(DS).grounded(-0.8f));
+        PROPS.put("curtain_l",  new Prop("/assets/mayhem/meshes/curtain_l.bin",  0.5, -60.0, 75.0, 180f).scaled(DS * 1.02f).grounded(-0.8f));
+        PROPS.put("curtain_r",  new Prop("/assets/mayhem/meshes/curtain_r.bin",  0.5, -60.0, 75.0, 180f).scaled(DS * 1.02f).grounded(-0.8f));
         PROPS.put("cage",       new Prop("/assets/mayhem/meshes/cage.bin",       0.5, -60.0, 75.0, 180f));
         PROPS.put("cage_door_l", new Prop("/assets/mayhem/meshes/cage_door_l.bin", 0.5, -60.0, 75.0, 180f));
         PROPS.put("cage_door_r", new Prop("/assets/mayhem/meshes/cage_door_r.bin", 0.5, -60.0, 75.0, 180f));
@@ -155,7 +157,7 @@ public final class PropRenderer {
             float yawNow = (float) w[3];
             Matrix4f mvp = new Matrix4f(fr.mayhem$matrix())
                     .translate((float) (w[0] - fr.mayhem$camX()),
-                               (float) (w[1] - fr.mayhem$camY()),
+                               (float) (w[1] + p.yOff - fr.mayhem$camY()),
                                (float) (w[2] - fr.mayhem$camZ()))
                     .rotateY((float) Math.toRadians(yawNow))
                     .scale(p.scale, p.scale * (float) w[4], p.scale);

@@ -182,8 +182,8 @@ def deck():
         ops.append(F(-72,y,0,72,y,53,VELVET))
     ops.append(F(-72,DECK_TOP,0,72,DECK_TOP,53,BLACKC))
     # friso de LED vermelho na borda frontal do topo, aberto na passarela
-    ops.append(F(-72,DECK_TOP,0,-14,DECK_TOP,0,REDC))
-    ops.append(F(14,DECK_TOP,0,72,DECK_TOP,0,REDC))
+    ops.append(F(-72,DECK_TOP,0,-11,DECK_TOP,0,REDC))
+    ops.append(F(11,DECK_TOP,0,72,DECK_TOP,0,REDC))
     return ops
 
 def plinths():
@@ -204,13 +204,17 @@ def _in_head(x, z):
     if d1 <= RC: return True
     return RIN <= d1 <= ROUT and z <= ZARM
 
+RUN_TOP = 1   # passarela baixa (~1 m), como a real; degrau na juncao
+
 def runway():
     ops=[]
-    for y in range(-1, DECK_TOP):
-        ops.append(F(-13,y,-90,13,y,-1,VELVET))
-    ops.append(F(-12,DECK_TOP,-90,12,DECK_TOP,-1,BLACKC))
-    ops.append(F(-13,DECK_TOP,-90,-13,DECK_TOP,-1,REDC))
-    ops.append(F(13,DECK_TOP,-90,13,DECK_TOP,-1,REDC))
+    # degrau intermediario na juncao com o deck
+    ops.append(F(-10,-1,-1,10,3,-1,VELVET))
+    for y in range(-1, RUN_TOP):
+        ops.append(F(-10,y,-90,10,y,-2,VELVET))
+    ops.append(F(-9,RUN_TOP,-90,9,RUN_TOP,-2,BLACKC))
+    ops.append(F(-10,RUN_TOP,-90,-10,RUN_TOP,-2,REDC))
+    ops.append(F(10,RUN_TOP,-90,10,RUN_TOP,-2,REDC))
     for z in range(-53, -156, -1):
         runs=[]
         x=-52
@@ -222,12 +226,12 @@ def runway():
             else:
                 x += 1
         for x0,x1 in runs:
-            for y in range(-1, DECK_TOP):
+            for y in range(-1, RUN_TOP):
                 ops.append(F(x0,y,z,x1,y,z,VELVET))
             for x2 in range(x0, x1+1):
                 border = (not _in_head(x2-1,z)) or (not _in_head(x2+1,z)) \
                       or (not _in_head(x2,z-1)) or (not _in_head(x2,z+1))
-                ops.append(S(x2,DECK_TOP,z, REDC if border else BLACKC))
+                ops.append(S(x2,RUN_TOP,z, REDC if border else BLACKC))
     return ops
 
 def led_wall():
