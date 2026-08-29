@@ -9,6 +9,15 @@ base { archivesName = project.archives_base_name }
 
 loom {
     splitEnvironmentSourceSets()
+    runs {
+        client {
+            vmArg "-Dmayhem.debugshot=1"
+            vmArg "-Dmayhem.debugshot.file=" + System.getProperty("shotfile", "debugshot.png")
+            vmArg "-Dmayhem.mode=" + System.getProperty("mode", "full")
+            vmArg "-Dmayhem.debugshot.cmd=" + System.getProperty("cmd", "")
+            if (System.getProperty("nodepth") != null) vmArg "-Dmayhem.nodepth=1"
+        }
+    }
     mods {
         "mayhem" {
             sourceSet sourceSets.main

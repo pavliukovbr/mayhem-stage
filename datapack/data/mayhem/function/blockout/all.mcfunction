@@ -2,8 +2,6 @@
 # e o arco antes dos pavilhoes para as emendas em X -8 e +8.
 function mayhem:blockout/runway
 function mayhem:blockout/deck
-function mayhem:blockout/castle_arch
-function mayhem:blockout/castle_pavilion_left
-function mayhem:blockout/castle_pavilion_right
+# castelo agora e a malha 3D do mod (CastleRenderer); blocos so no resto
 function mayhem:blockout/plinths
 function mayhem:blockout/led_wall
