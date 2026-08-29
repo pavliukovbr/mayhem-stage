@@ -31,7 +31,8 @@ public final class PropRenderer {
         final String meshPath;
         int vao = -1, indexCount;
         double sx, sy, sz, tx, ty, tz;    // origem e destino do movimento
-        float syaw, tyaw;                  // rotacao tambem anima (cortinas!)
+        float syaw, tyaw;                  // rotacao tambem anima
+        float sSy = 1f, tSy = 1f;          // escala vertical: a saia icada comprime
         float scale = 1f;
         long moveStart; int moveDur;       // ms
 
@@ -42,10 +43,10 @@ public final class PropRenderer {
 
         Prop scaled(float s) { scale = s; return this; }
 
-        void moveTo(double x, double y, double z, float yaw, int durMs) {
+        void moveTo(double x, double y, double z, float yaw, float scaleY, int durMs) {
             double[] now = pos();
-            sx = now[0]; sy = now[1]; sz = now[2]; syaw = (float) now[3];
-            tx = x; ty = y; tz = z; tyaw = yaw;
+            sx = now[0]; sy = now[1]; sz = now[2]; syaw = (float) now[3]; sSy = (float) now[4];
+            tx = x; ty = y; tz = z; tyaw = yaw; tSy = scaleY;
             moveStart = System.currentTimeMillis();
             moveDur = Math.max(durMs, 1);
         }
@@ -55,7 +56,8 @@ public final class PropRenderer {
             double t = moveDur <= 0 ? 1.0 : Math.min(1.0, dt / (double) moveDur);
             t = t * t * (3 - 2 * t);   // ease in-out
             return new double[]{sx + (tx - sx) * t, sy + (ty - sy) * t,
-                                sz + (tz - sz) * t, syaw + (tyaw - syaw) * t};
+                                sz + (tz - sz) * t, syaw + (tyaw - syaw) * t,
+                                sSy + (tSy - sSy) * t};
         }
     }
 
@@ -74,10 +76,10 @@ public final class PropRenderer {
         PROPS.put("lift",       new Prop("/assets/mayhem/meshes/lift.bin",       0.5, -60.0, 75.0, 180f));
     }
 
-    public static void moveProp(String name, double x, double y, double z, float yaw, int durMs) {
+    public static void moveProp(String name, double x, double y, double z,
+                                float yaw, float scaleY, int durMs) {
         Prop p = PROPS.get(name);
-        if (p != null) p.moveTo(x, y, z, yaw, durMs);
-        MayhemShow.LOGGER.info("MOVE {} -> ({}, {}, {}) yaw={} dur={}ms", name, x, y, z, yaw, durMs);
+        if (p != null) p.moveTo(x, y, z, yaw, scaleY, durMs);
     }
 
     public static void dumpState() {
@@ -155,7 +157,7 @@ public final class PropRenderer {
                                (float) (w[1] - fr.mayhem$camY()),
                                (float) (w[2] - fr.mayhem$camZ()))
                     .rotateY((float) Math.toRadians(yawNow))
-                    .scale(p.scale);
+                    .scale(p.scale, p.scale * (float) w[4], p.scale);
             // frustum classico vs depth reversed-Z: nega a linha z do clip
             mvp = new Matrix4f().scaling(1f, 1f, -1f).mul(mvp);
             float[] m = new float[16];

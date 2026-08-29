@@ -10,7 +10,7 @@ import net.minecraft.resources.Identifier;
  * do estado; o cliente so interpola. E o embriao do sistema de cues.
  */
 public record PropMovePayload(String prop, double x, double y, double z,
-                              float yaw, int durationMs) implements CustomPacketPayload {
+                              float yaw, float scaleY, int durationMs) implements CustomPacketPayload {
     public static final Type<PropMovePayload> TYPE =
             new Type<>(Identifier.fromNamespaceAndPath(MayhemShow.MOD_ID, "prop_move"));
 
@@ -18,10 +18,10 @@ public record PropMovePayload(String prop, double x, double y, double z,
             (buf, p) -> {
                 buf.writeUtf(p.prop);
                 buf.writeDouble(p.x); buf.writeDouble(p.y); buf.writeDouble(p.z);
-                buf.writeFloat(p.yaw); buf.writeInt(p.durationMs);
+                buf.writeFloat(p.yaw); buf.writeFloat(p.scaleY); buf.writeInt(p.durationMs);
             },
             buf -> new PropMovePayload(buf.readUtf(), buf.readDouble(), buf.readDouble(),
-                    buf.readDouble(), buf.readFloat(), buf.readInt()));
+                    buf.readDouble(), buf.readFloat(), buf.readFloat(), buf.readInt()));
 
     @Override
     public Type<PropMovePayload> type() { return TYPE; }

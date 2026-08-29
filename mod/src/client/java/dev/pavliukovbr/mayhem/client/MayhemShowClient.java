@@ -16,7 +16,7 @@ public class MayhemShowClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(PropMovePayload.TYPE, (payload, ctx) ->
                 ctx.client().execute(() -> PropRenderer.moveProp(payload.prop(),
                         payload.x(), payload.y(), payload.z(),
-                        payload.yaw(), payload.durationMs())));
+                        payload.yaw(), payload.scaleY(), payload.durationMs())));
         MayhemShow.LOGGER.info("Mayhem Show client pronto para renderizar.");
     }
 }
