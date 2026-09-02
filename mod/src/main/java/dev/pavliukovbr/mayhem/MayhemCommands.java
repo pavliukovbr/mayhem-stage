@@ -1,6 +1,7 @@
 package dev.pavliukovbr.mayhem;
 
 import com.mojang.brigadier.arguments.FloatArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -59,6 +60,20 @@ public final class MayhemCommands {
             liftCmd.then(timed("bottom", 8f, (src, sec) -> { lift = 0f; return sync(src, sec); }));
             root.then(liftCmd);
 
+            var light = literal("light");
+            for (String preset : new String[]{"red", "white", "blue", "off"}) {
+                light.then(literal(preset).executes(ctx ->
+                        fx(ctx.getSource(), "lights", preset)));
+            }
+            root.then(light);
+
+            var screen = literal("screen");
+            screen.then(literal("play").then(argument("video", StringArgumentType.word())
+                    .executes(ctx -> fx(ctx.getSource(), "screen",
+                            "play " + StringArgumentType.getString(ctx, "video")))));
+            screen.then(literal("stop").executes(ctx -> fx(ctx.getSource(), "screen", "stop")));
+            root.then(screen);
+
             dispatcher.register(root);
         });
     }
@@ -95,6 +110,18 @@ public final class MayhemCommands {
                 "cena (%.1fs) saia=%s gaiola=%s elevador=%s",
                 seconds, curtain > 0 ? "aberta" : "fechada",
                 door > 0 ? "aberta" : "fechada", lift > 0 ? "topo" : "base")), true);
+        return 1;
+    }
+
+    public static final Map<String, ShowFxPayload> FX_STATE = new ConcurrentHashMap<>();
+
+    private static int fx(CommandSourceStack src, String kind, String arg) {
+        var payload = new ShowFxPayload(kind, arg);
+        FX_STATE.put(kind, payload);
+        for (var player : PlayerLookup.all(src.getServer())) {
+            ServerPlayNetworking.send(player, payload);
+        }
+        src.sendSuccess(() -> Component.literal(kind + ": " + arg), true);
         return 1;
     }
 

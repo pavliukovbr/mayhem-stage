@@ -94,9 +94,10 @@ public final class PropRenderer {
         });
     }
 
-    private static int program = -1, uMvp, uSun, uCam;
+    private static int program = -1, uMvp, uSun, uCam, uAmb;
     private static int frameNo;
     private static int fbo = -1, lastColor, lastDepth;
+    private static int fboColorOnly = -1, lastColorOnly;
     private static boolean broken;
 
     public static void render(CameraRenderState cam) {
@@ -145,6 +146,7 @@ public final class PropRenderer {
         boolean prevDepthMask = GL33C.glGetBoolean(GL33C.GL_DEPTH_WRITEMASK);
 
         GL33C.glUseProgram(program);
+        GL33C.glUniform1f(uAmb, ShowLights.ambientScale);
         GL33C.glEnable(GL33C.GL_DEPTH_TEST);
         GL33C.glDepthFunc(GL33C.GL_GEQUAL);
         GL33C.glDepthMask(true);
@@ -178,6 +180,20 @@ public final class PropRenderer {
             GL33C.glDrawElements(GL33C.GL_TRIANGLES, p.indexCount, GL33C.GL_UNSIGNED_INT, 0);
         }
 
+        // telao de video (emissivo, com depth do mundo)
+        VideoScreen.render(fr.mayhem$matrix(), fr.mayhem$camX(), fr.mayhem$camY(), fr.mayhem$camZ());
+
+        // passe de luz diferida: FBO so de cor, lendo o depth como textura
+        if (fboColorOnly == -1) fboColorOnly = GL33C.glGenFramebuffers();
+        GL33C.glBindFramebuffer(GL33C.GL_FRAMEBUFFER, fboColorOnly);
+        if (colorId != lastColorOnly) {
+            GL33C.glFramebufferTexture2D(GL33C.GL_FRAMEBUFFER, GL33C.GL_COLOR_ATTACHMENT0,
+                    GL33C.GL_TEXTURE_2D, colorId, 0);
+            lastColorOnly = colorId;
+        }
+        ShowLights.render(fr.mayhem$matrix(), fr.mayhem$camX(), fr.mayhem$camY(),
+                fr.mayhem$camZ(), depthId);
+
         GL33C.glBindVertexArray(prevVao);
         GL33C.glUseProgram(prevProgram);
         if (prevCull) GL33C.glEnable(GL33C.GL_CULL_FACE);
@@ -196,6 +212,7 @@ public final class PropRenderer {
         program = buildProgram();
         uMvp = GL33C.glGetUniformLocation(program, "uMvp");
         uCam = GL33C.glGetUniformLocation(program, "uCam");
+        uAmb = GL33C.glGetUniformLocation(program, "uAmb");
         uSun = GL33C.glGetUniformLocation(program, "uSun");
         MayhemShow.LOGGER.info("Props carregados: {}", PROPS.keySet());
     }
@@ -241,7 +258,7 @@ public final class PropRenderer {
                 }""";
         String fs = """
                 #version 150
-                uniform vec3 uSun; uniform vec3 uCam;
+                uniform vec3 uSun; uniform vec3 uCam; uniform float uAmb;
                 in vec3 vNormal; in vec3 vColor; in vec3 vPos; in float vAo;
                 out vec4 fragColor;
                 void main() {
@@ -255,7 +272,7 @@ public final class PropRenderer {
                     // rim descola a silhueta do telao preto
                     vec3 v = normalize(uCam - vPos);
                     float rim = 0.05 * pow(1.0 - max(dot(n, v), 0.0), 4.0);
-                    vec3 c = vColor * (hemi + sun + fill) * ao + rim * vec3(0.85, 0.83, 0.78);
+                    vec3 c = vColor * (hemi + sun + fill) * uAmb * ao + rim * vec3(0.85, 0.83, 0.78) * uAmb;
                     fragColor = vec4(pow(c, vec3(1.0 / 2.2)), 1.0);
                 }""";
         int v = compile(GL33C.GL_VERTEX_SHADER, vs);

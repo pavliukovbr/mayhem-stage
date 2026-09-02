@@ -22,12 +22,17 @@ public class MayhemShow implements ModInitializer {
     public void onInitialize() {
         StageBlocks.init();
         PayloadTypeRegistry.clientboundPlay().register(PropMovePayload.TYPE, PropMovePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ShowFxPayload.TYPE, ShowFxPayload.CODEC);
         MayhemCommands.register();
         ShowPhysics.init();
         // quem entra no meio do show recebe o ultimo estado de cada prop
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
-                MayhemCommands.STATE.values().forEach(p ->
-                        ServerPlayNetworking.send(handler.getPlayer(), p)));
+                {
+                    MayhemCommands.STATE.values().forEach(p ->
+                            ServerPlayNetworking.send(handler.getPlayer(), p));
+                    MayhemCommands.FX_STATE.values().forEach(p ->
+                            ServerPlayNetworking.send(handler.getPlayer(), p));
+                });
         LOGGER.info("Mayhem Show carregado. O relogio do show pertence ao servidor.");
     }
 }
