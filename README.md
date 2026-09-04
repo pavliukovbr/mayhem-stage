@@ -1,5 +1,10 @@
 # Mayhem Stage
 
+> **Projeto encerrado em setembro de 2026.** O palco ficou no meio do caminho:
+> o castelo, o vestido e o rig de luz chegaram a rodar no mod, mas o resultado
+> nao ficou bom o bastante e o trabalho parou aqui. O repositorio fica no ar
+> como registro e esta arquivado, sem manutencao.
+
 Projeto de concerto dentro do Minecraft Java Edition. A ideia e montar um show
 completo no mapa: palco de teatro barroco, telao, passarela com bordas de LED,
 luzes sincronizadas com a musica e publico entrando por multiplayer. Este
